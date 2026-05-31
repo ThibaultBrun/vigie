@@ -221,10 +221,9 @@ const prochainesMarees = computed(() => {
 })
 
 const NIVEAUX = {
-  1: { label: 'Tranquille', classe: 'tranquille' },
-  2: { label: 'Modéré', classe: 'moyen' },
-  3: { label: 'Soutenu', classe: 'soutenu' },
-  4: { label: 'Fort', classe: 'fort' },
+  1: { label: 'Facile', classe: 'tranquille' },
+  2: { label: 'Moyen', classe: 'moyen' },
+  3: { label: 'Difficile', classe: 'fort' },
 }
 
 const remontee = computed(() => {
@@ -262,7 +261,7 @@ const remontee = computed(() => {
     adj = force > 0.7 ? 2 : 1
     tideTxt = 'jusant' + (force > 0.7 ? ' fort' : '') + ' — la marée tire vers l’aval (gêne)'
   }
-  const lvl = Math.max(1, Math.min(4, riverLvl + adj))
+  const lvl = Math.max(1, Math.min(3, riverLvl + adj))
   return { ...NIVEAUX[lvl], texte: `${riverTxt} + ${tideTxt}.` }
 })
 </script>
