@@ -150,7 +150,7 @@ const prochainesMarees = computed(() => {
   const now = Date.now() - 1800000
   return (maree.value?.pm_bm || [])
     .filter((p) => new Date(p.heure_locale).getTime() >= now)
-    .slice(0, 5)
+    .slice(0, 2)
 })
 </script>
 
