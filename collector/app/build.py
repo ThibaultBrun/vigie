@@ -1,7 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from .config import charger_site
-from .sources import hubeau, openmeteo, tide_harmonic, webcam
+from .sources import hubeau, openmeteo, tide_harmonic, webcam, maree_coef
 
 PARIS = ZoneInfo("Europe/Paris")
 
@@ -56,6 +56,13 @@ def _maree(site):
     pm_bm = analyse["pm_bm"] if analyse else []
     courbe = analyse["courbe"] if analyse else []
     phase = _phase_maintenant(obs["phase"], pm_bm, obs["horodatage"])
+    try:
+        jours = maree_coef.coefficients(cfg["maree_info_id"]) if cfg.get("maree_info_id") else None
+    except Exception:
+        jours = None
+    coef_today = None
+    if jours and jours[0]["coefficients"]:
+        coef_today = max(jours[0]["coefficients"])
     return {
         "disponible": True,
         "phase": phase,
@@ -65,7 +72,9 @@ def _maree(site):
         "pm_bm": pm_bm,
         "courbe": courbe,
         "methode_pm_bm": METHODE_PM_BM,
-        "coefficient": None,
+        "coefficient": coef_today,
+        "coefficients_jour": jours[0]["coefficients"] if jours else [],
+        "coefficients_jours": jours or [],
         "source_coef": cfg.get("port_coef"),
     }
 

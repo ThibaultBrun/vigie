@@ -20,6 +20,11 @@ function fmtH(iso) {
   return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
+function dShort(iso) {
+  const p = iso.split('-')
+  return `${p[2]}/${p[1]}`
+}
+
 async function charger() {
   try {
     const r = await fetch(`data/${SITE}.json`, { cache: 'no-store' })
@@ -162,8 +167,14 @@ const prochainesMarees = computed(() => {
         <div class="ligne"><span class="k">Niveau observé</span><span class="v">{{ maree.niveau_observe_m }} m</span></div>
         <div class="ligne">
           <span class="k">Coefficient</span>
-          <span class="v" v-if="maree.coefficient != null">{{ maree.coefficient }} ({{ maree.source_coef }})</span>
-          <span class="stale" v-else>à venir</span>
+          <span class="v" v-if="maree.coefficients_jour && maree.coefficients_jour.length">{{ maree.coefficients_jour.join(' / ') }} <span class="cf-src">({{ maree.source_coef }})</span></span>
+          <span class="stale" v-else>indisponible</span>
+        </div>
+        <div class="coef7" v-if="maree.coefficients_jours && maree.coefficients_jours.length">
+          <div class="cj" v-for="(j, i) in maree.coefficients_jours" :key="i">
+            <span class="cj-d">{{ dShort(j.date) }}</span>
+            <span class="cj-c">{{ j.coefficients.length ? Math.max(...j.coefficients) : '—' }}</span>
+          </div>
         </div>
         <div class="ligne" v-if="!prochainesMarees.length">
           <span class="k">Prochaines marées</span><span class="stale">à venir (harmonique)</span>

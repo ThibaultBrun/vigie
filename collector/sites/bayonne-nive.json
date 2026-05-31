@@ -6,7 +6,8 @@
   "maree": {
     "station_observee": "Q935251001",
     "station_nom": "Pont Blanc",
-    "port_coef": "Boucau-Bayonne"
+    "port_coef": "Boucau-Bayonne",
+    "maree_info_id": 140
   },
   "debit": {
     "station": "Q931251001",
