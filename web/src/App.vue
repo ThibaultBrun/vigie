@@ -56,19 +56,32 @@ const notes = computed(() => data.value?.notes || [])
 const webcam = computed(() => data.value?.webcam)
 
 const HEURES = 7 * 24
+const NUIT_DEBUT = 22
+const NUIT_FIN = 7
 
 const pas = ref(0)
 const futur = computed(() => pas.value > 0)
 
-const baseHeureMs = computed(() => {
+const creneaux = computed(() => {
   void data.value
-  const d = new Date()
-  d.setMinutes(0, 0, 0)
-  d.setHours(d.getHours() + 1)
-  return d.getTime()
+  const out = []
+  const base = new Date()
+  base.setMinutes(0, 0, 0)
+  base.setHours(base.getHours() + 1)
+  const fin = Date.now() + HEURES * 3600000
+  for (let t = base.getTime(); t <= fin; t += 3600000) {
+    const h = new Date(t).getHours()
+    if (h >= NUIT_FIN && h < NUIT_DEBUT) out.push(t)
+  }
+  return out
 })
 
-const cibleMs = computed(() => (pas.value === 0 ? Date.now() : baseHeureMs.value + (pas.value - 1) * 3600000))
+const cibleMs = computed(() => {
+  if (pas.value === 0) return Date.now()
+  const arr = creneaux.value
+  if (!arr.length) return Date.now()
+  return arr[Math.min(pas.value - 1, arr.length - 1)]
+})
 
 function estAujourdhui(d) {
   const j0 = new Date(); j0.setHours(0, 0, 0, 0)
@@ -267,7 +280,7 @@ const remontee = computed(() => {
         <span class="tbar-label">{{ futur ? cibleLabel : '🕐 Maintenant' }}</span>
         <button class="btn-now" v-if="futur" @click="pas = 0">↩ Maintenant</button>
       </div>
-      <input class="slider" type="range" min="0" :max="HEURES" step="1" v-model.number="pas" />
+      <input class="slider" type="range" min="0" :max="creneaux.length" step="1" v-model.number="pas" />
       <div class="tbar-hint">
         {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter jusqu’à 48 h' }}
       </div>
