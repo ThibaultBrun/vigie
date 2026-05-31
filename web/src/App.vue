@@ -140,6 +140,42 @@ const coucherVue = computed(() => {
   return f ? f.heure : m.coucher_soleil_local
 })
 
+const VB_W = 320
+const VB_H = 90
+
+const graph = computed(() => {
+  const c = maree.value?.courbe || []
+  if (c.length < 2) return null
+  const t0 = Date.now()
+  const t1 = t0 + HEURES * 3600000
+  const pts = c
+    .map((p) => ({ t: new Date(p.heure_locale).getTime(), h: p.niveau_m }))
+    .filter((p) => p.t >= t0 - 3600000 && p.t <= t1 + 3600000)
+  if (pts.length < 2) return null
+  const hs = pts.map((p) => p.h)
+  const hmin = Math.min(...hs)
+  const hmax = Math.max(...hs)
+  const pad = (hmax - hmin) * 0.12 || 0.5
+  const ylo = hmin - pad
+  const yhi = hmax + pad
+  const X = (t) => ((t - t0) / (t1 - t0)) * VB_W
+  const Y = (h) => VB_H - ((h - ylo) / (yhi - ylo)) * VB_H
+  const ligne = pts.map((p, i) => (i ? 'L' : 'M') + X(p.t).toFixed(1) + ' ' + Y(p.h).toFixed(1)).join(' ')
+  const cm = Math.max(t0, Math.min(t1, cibleMs.value))
+  let hc = pts[pts.length - 1].h
+  for (let i = 1; i < pts.length; i++) {
+    if (pts[i].t >= cm) {
+      const a = pts[i - 1]
+      const b = pts[i]
+      const r = b.t === a.t ? 0 : (cm - a.t) / (b.t - a.t)
+      hc = a.h + (b.h - a.h) * r
+      break
+    }
+  }
+  const aire = `${ligne} L ${X(pts[pts.length - 1].t).toFixed(1)} ${VB_H} L ${X(pts[0].t).toFixed(1)} ${VB_H} Z`
+  return { ligne, aire, cx: X(cm).toFixed(1), cy: Y(hc).toFixed(1) }
+})
+
 const jauge = computed(() => {
   const d = debit.value
   if (!d?.disponible || !d.echelle || d.echelle.min_m3s == null) return null
@@ -244,6 +280,12 @@ const remontee = computed(() => {
 
     <section class="carte">
       <h2>🌊 Marée <span class="tag-prev" v-if="futur">prévue</span></h2>
+      <svg v-if="graph" class="tide-graph" :viewBox="`0 0 ${VB_W} ${VB_H}`" preserveAspectRatio="none">
+        <path :d="graph.aire" class="tg-area" />
+        <path :d="graph.ligne" class="tg-line" />
+        <line :x1="graph.cx" :x2="graph.cx" y1="0" :y2="VB_H" class="tg-cursor" />
+        <circle :cx="graph.cx" :cy="graph.cy" r="3" class="tg-dot" />
+      </svg>
       <template v-if="mareeVue">
         <div class="ligne"><span class="k">Phase</span><span class="v">{{ mareeVue.phase }}</span></div>
         <div class="ligne"><span class="k">Niveau {{ mareeVue.label }}</span><span class="v">{{ mareeVue.niveau }} m</span></div>
