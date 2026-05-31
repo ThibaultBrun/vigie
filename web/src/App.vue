@@ -55,11 +55,20 @@ const meteo = computed(() => data.value?.meteo)
 const notes = computed(() => data.value?.notes || [])
 const webcam = computed(() => data.value?.webcam)
 
-const HORIZON_MIN = 48 * 60
+const HEURES = 48
 
-const minutesFutur = ref(0)
-const futur = computed(() => minutesFutur.value > 0)
-const cibleMs = computed(() => Date.now() + minutesFutur.value * 60000)
+const pas = ref(0)
+const futur = computed(() => pas.value > 0)
+
+const baseHeureMs = computed(() => {
+  void data.value
+  const d = new Date()
+  d.setMinutes(0, 0, 0)
+  d.setHours(d.getHours() + 1)
+  return d.getTime()
+})
+
+const cibleMs = computed(() => (pas.value === 0 ? Date.now() : baseHeureMs.value + (pas.value - 1) * 3600000))
 
 function prefixeJour(d) {
   const j0 = new Date(); j0.setHours(0, 0, 0, 0)
@@ -215,9 +224,9 @@ const remontee = computed(() => {
     <section class="carte tbar">
       <div class="tbar-head">
         <span class="tbar-label">{{ futur ? cibleLabel : '🕐 Maintenant' }}</span>
-        <button class="btn-now" v-if="futur" @click="minutesFutur = 0">↩ Maintenant</button>
+        <button class="btn-now" v-if="futur" @click="pas = 0">↩ Maintenant</button>
       </div>
-      <input class="slider" type="range" min="0" :max="HORIZON_MIN" step="15" v-model.number="minutesFutur" />
+      <input class="slider" type="range" min="0" :max="HEURES" step="1" v-model.number="pas" />
       <div class="tbar-hint">
         {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter jusqu’à 48 h' }}
       </div>
