@@ -174,10 +174,11 @@ const graph = computed(() => {
   t0 = Math.max(dStart, t1 - FEN)
   const pts = all.filter((p) => p.t >= t0 - 1800000 && p.t <= t1 + 1800000)
   if (pts.length < 2) return null
-  const hs = pts.map((p) => p.h)
+  const fwd = all.filter((p) => p.t >= Date.now() - 3600000)
+  const hs = (fwd.length > 1 ? fwd : all).map((p) => p.h)
   const hmin = Math.min(...hs)
   const hmax = Math.max(...hs)
-  const pad = (hmax - hmin) * 0.12 || 0.5
+  const pad = (hmax - hmin) * 0.08 || 0.5
   const ylo = hmin - pad
   const yhi = hmax + pad
   const X = (t) => ((t - t0) / (t1 - t0)) * VB_W
