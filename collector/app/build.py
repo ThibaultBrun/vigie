@@ -13,7 +13,7 @@ def construire(site_id):
     debit = _bloc(_debit, site, notes, "debit")
     meteo = _bloc(_meteo, site, notes, "meteo")
     webcam_data = _bloc(_webcam, site, notes, "webcam") if site.get("webcam") else None
-    danger = _danger(debit)
+    danger = _danger(debit, meteo)
     return {
         "point": {"nom": site["nom"], "lat": site["lat"], "lon": site["lon"]},
         "horodatage": datetime.now(PARIS).isoformat(),
@@ -164,8 +164,26 @@ def _webcam(site):
     return base
 
 
-def _danger(debit):
+def _danger(debit, meteo):
     messages = []
     if debit.get("disponible") and debit.get("palier") == "eleve":
         messages.append(f"Débit Nive élevé : {debit.get('valeur_m3s')} m³/s")
+    if meteo and meteo.get("disponible"):
+        heure = _orage_proche(meteo.get("evolution_horaire", []))
+        if meteo.get("orage"):
+            messages.append("Orage en cours")
+        elif heure:
+            messages.append(f"Orage prévu vers {heure}")
     return {"actif": len(messages) > 0, "messages": messages}
+
+
+def _orage_proche(evolution):
+    maintenant = datetime.now(PARIS)
+    for p in evolution:
+        if not p.get("orage"):
+            continue
+        t = datetime.fromisoformat(p["heure_locale"])
+        delta = (t - maintenant).total_seconds()
+        if 0 <= delta <= 6 * 3600:
+            return t.strftime("%Hh%M")
+    return None
