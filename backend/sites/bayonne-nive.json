@@ -1,0 +1,23 @@
+{
+  "id": "bayonne-nive",
+  "nom": "Bayonne – aviron (Société Nautique de Bayonne)",
+  "lat": 43.48946,
+  "lon": -1.46661,
+  "maree": {
+    "station_observee": "Q935251001",
+    "station_nom": "Pont Blanc",
+    "port_coef": "Boucau-Bayonne"
+  },
+  "debit": {
+    "station": "Q931251001",
+    "station_nom": "Cambo-les-Bains",
+    "module_m3s": 30.2,
+    "qix2_m3s": 390,
+    "qix5_m3s": 530,
+    "qix10_m3s": 620,
+    "mediane_m3s": null,
+    "qmna5_m3s": null,
+    "seuil_vigilance_m3s": null
+  },
+  "vigilance_departement": "64"
+}

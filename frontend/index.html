@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vigie – conditions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1 id="titre">Vigie</h1>
+    <p id="horodatage" class="sub"></p>
+  </header>
+
+  <div id="danger" class="danger hidden"></div>
+
+  <main id="contenu">
+    <section class="carte" id="carte-maree">
+      <h2>🌊 Marée</h2>
+      <div class="corps" id="maree"></div>
+    </section>
+    <section class="carte" id="carte-debit">
+      <h2>💧 Débit Nive</h2>
+      <div class="corps" id="debit"></div>
+    </section>
+    <section class="carte" id="carte-meteo">
+      <h2>🌤️ Météo</h2>
+      <div class="corps" id="meteo"></div>
+    </section>
+  </main>
+
+  <div id="notes" class="notes"></div>
+
+  <footer>
+    <p class="sources">Sources : Hub'Eau / Eaufrance · Open-Meteo · données SHOM · Météo-France</p>
+    <p class="disclaimer">Aide d'information personnelle. Ne remplace pas les sources nautiques officielles (SHOM, capitainerie, Vigicrues, Météo-France marine). Données temps réel Hub'Eau brutes non expertisées.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
