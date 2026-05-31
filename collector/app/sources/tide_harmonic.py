@@ -32,7 +32,12 @@ def _serie(code_station):
     return out
 
 
-def pm_bm_jour(code_station, lat):
+def _local_iso(grille, i):
+    ts = grille[i].astype("datetime64[s]").astype(datetime).replace(tzinfo=timezone.utc)
+    return ts.astimezone(PARIS).isoformat()
+
+
+def analyser(code_station, lat):
     serie = _serie(code_station)
     if len(serie) < 1000:
         return None
@@ -46,7 +51,7 @@ def pm_bm_jour(code_station, lat):
     grille = np.arange(
         np.datetime64(debut.astimezone(timezone.utc).replace(tzinfo=None), "s"),
         np.datetime64(fin.astimezone(timezone.utc).replace(tzinfo=None), "s"),
-        np.timedelta64(120, "s"),
+        np.timedelta64(300, "s"),
     )
     rec = utide.reconstruct(grille, coef, verbose=False)
     hp = np.asarray(rec.h, dtype=float)
@@ -60,11 +65,21 @@ def pm_bm_jour(code_station, lat):
             typ = "BM"
         else:
             continue
-        ts = grille[i].astype("datetime64[s]").astype(datetime).replace(tzinfo=timezone.utc)
-        local = ts.astimezone(PARIS)
-        pm_bm.append({
-            "type": typ,
-            "heure_locale": local.isoformat(),
-            "hauteur_m": round(float(hp[i]), 2),
-        })
-    return pm_bm
+        pm_bm.append({"type": typ, "heure_locale": _local_iso(grille, i), "hauteur_m": round(float(hp[i]), 2)})
+
+    courbe = []
+    n = len(hp)
+    for i in range(0, n, 3):
+        if i + 1 < n and hp[i + 1] > hp[i]:
+            phase = "montante"
+        elif i + 1 < n and hp[i + 1] < hp[i]:
+            phase = "descendante"
+        elif i > 0 and hp[i] < hp[i - 1]:
+            phase = "descendante"
+        elif i > 0 and hp[i] > hp[i - 1]:
+            phase = "montante"
+        else:
+            phase = "etale"
+        courbe.append({"heure_locale": _local_iso(grille, i), "niveau_m": round(float(hp[i]), 2), "phase": phase})
+
+    return {"pm_bm": pm_bm, "courbe": courbe}

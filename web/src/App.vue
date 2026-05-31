@@ -66,6 +66,37 @@ const jauge = computed(() => {
 })
 
 const NAV_LABEL = { tranquille: 'Tranquille', moyen: 'Ça pousse', fort: 'Fort courant' }
+
+function minNow() {
+  const n = new Date()
+  return n.getHours() * 60 + n.getMinutes()
+}
+
+function minIso(iso) {
+  return parseInt(iso.slice(11, 13)) * 60 + parseInt(iso.slice(14, 16))
+}
+
+function fmtMin(m) {
+  const h = String(Math.floor(m / 60)).padStart(2, '0')
+  const mm = String(m % 60).padStart(2, '0')
+  return `${h}:${mm}`
+}
+
+const heureSel = ref(minNow())
+
+function plusProche(liste) {
+  if (!liste || !liste.length) return null
+  let best = liste[0]
+  let bd = Infinity
+  for (const p of liste) {
+    const dd = Math.abs(minIso(p.heure_locale) - heureSel.value)
+    if (dd < bd) { bd = dd; best = p }
+  }
+  return best
+}
+
+const mareeSel = computed(() => plusProche(maree.value?.courbe))
+const ventSel = computed(() => plusProche(meteo.value?.evolution_horaire))
 </script>
 
 <template>
@@ -80,6 +111,28 @@ const NAV_LABEL = { tranquille: 'Tranquille', moyen: 'Ça pousse', fort: 'Fort c
     <div v-if="danger && danger.actif && danger.messages.length" class="danger">
       ⚠️ {{ danger.messages.join(' · ') }}
     </div>
+
+    <section class="carte planif" v-if="mareeSel || ventSel">
+      <h2>🕐 Prévision à une heure</h2>
+      <div class="planif-head">
+        <span class="planif-heure">{{ fmtMin(heureSel) }}</span>
+        <button class="btn-now" @click="heureSel = minNow()">Maintenant</button>
+      </div>
+      <input class="slider" type="range" min="0" max="1439" step="15" v-model.number="heureSel" />
+      <div class="ligne" v-if="mareeSel">
+        <span class="k">🌊 Marée prévue</span>
+        <span class="v">{{ mareeSel.niveau_m }} m · {{ mareeSel.phase }}</span>
+      </div>
+      <div class="ligne" v-if="ventSel">
+        <span class="k">💨 Vent prévu</span>
+        <span class="v">{{ ventSel.vent_dir }} {{ ventSel.vent_kmh }} km/h · raf. {{ ventSel.rafales_kmh }}</span>
+      </div>
+      <div class="ligne" v-if="ventSel && ventSel.temp_c != null">
+        <span class="k">🌡️ Temp / nuages</span>
+        <span class="v">{{ ventSel.temp_c }} °C · {{ ventSel.cloud_cover_pct }} %</span>
+      </div>
+      <div class="horo">Marée : modèle harmonique · Vent : prévision Open-Meteo · le débit n'est pas prévu (voir valeur actuelle ci-dessous).</div>
+    </section>
 
     <section class="carte">
       <h2>🌊 Marée</h2>

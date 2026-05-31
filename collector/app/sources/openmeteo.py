@@ -15,7 +15,7 @@ def meteo(lat, lon):
         "latitude": lat,
         "longitude": lon,
         "current": "temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover",
-        "hourly": "wind_speed_10m,wind_gusts_10m,wind_direction_10m",
+        "hourly": "wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m,cloud_cover",
         "daily": "sunset",
         "timezone": "Europe/Paris",
         "wind_speed_unit": "kmh",
@@ -46,6 +46,8 @@ def _evolution(hourly):
     vent = hourly.get("wind_speed_10m", [])
     rafales = hourly.get("wind_gusts_10m", [])
     direction = hourly.get("wind_direction_10m", [])
+    temp = hourly.get("temperature_2m", [])
+    nuages = hourly.get("cloud_cover", [])
     out = []
     for i in range(len(heures)):
         out.append({
@@ -53,5 +55,7 @@ def _evolution(hourly):
             "vent_kmh": vent[i] if i < len(vent) else None,
             "rafales_kmh": rafales[i] if i < len(rafales) else None,
             "vent_dir": _dir(direction[i]) if i < len(direction) else None,
+            "temp_c": temp[i] if i < len(temp) else None,
+            "cloud_cover_pct": nuages[i] if i < len(nuages) else None,
         })
     return out

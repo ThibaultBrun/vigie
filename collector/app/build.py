@@ -50,9 +50,11 @@ def _maree(site):
     if obs is None:
         return {"disponible": False}
     try:
-        pm_bm = tide_harmonic.pm_bm_jour(cfg["station_observee"], site["lat"]) or []
+        analyse = tide_harmonic.analyser(cfg["station_observee"], site["lat"])
     except Exception:
-        pm_bm = []
+        analyse = None
+    pm_bm = analyse["pm_bm"] if analyse else []
+    courbe = analyse["courbe"] if analyse else []
     return {
         "disponible": True,
         "phase": obs["phase"],
@@ -60,6 +62,7 @@ def _maree(site):
         "source_niveau": obs["source"],
         "horodatage_niveau": obs["horodatage"],
         "pm_bm": pm_bm,
+        "courbe": courbe,
         "methode_pm_bm": METHODE_PM_BM,
         "coefficient": None,
         "source_coef": cfg.get("port_coef"),

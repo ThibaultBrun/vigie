@@ -72,6 +72,12 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 .nav-badge.moyen { background: #5a4a1f; color: #f0d68a; }
 .nav-badge.fort { background: #6b2424; color: #ff9c9c; }
 
+.planif { border: 1px solid #2a3c5a; }
+.planif-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.planif-heure { font-size: 1.7rem; font-weight: 700; color: var(--accent); }
+.btn-now { background: var(--accent); color: #06243f; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; cursor: pointer; }
+.slider { width: 100%; margin: 6px 0 12px; accent-color: var(--accent); }
+
 .cam { opacity: 0.92; }
 .cam-tag { font-size: 0.7rem; color: var(--sub); font-weight: normal; }
 .cam-img { width: 100%; border-radius: 10px; display: block; }
