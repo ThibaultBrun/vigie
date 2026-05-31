@@ -7,9 +7,15 @@ BASE = "https://hubeau.eaufrance.fr/api/v2/hydrometrie/observations_tr"
 
 
 def _get(params):
-    r = requests.get(BASE, params=params, timeout=20)
-    r.raise_for_status()
-    return r.json()
+    derniere = None
+    for _ in range(3):
+        try:
+            r = requests.get(BASE, params=params, timeout=(10, 60))
+            r.raise_for_status()
+            return r.json()
+        except requests.RequestException as e:
+            derniere = e
+    raise derniere
 
 
 def _to_paris(s):

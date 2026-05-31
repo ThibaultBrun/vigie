@@ -10,8 +10,18 @@ BASE = "https://hubeau.eaufrance.fr/api/v2/hydrometrie/observations_tr"
 
 def _serie(code_station):
     params = {"code_entite": code_station, "grandeur_hydro": "H", "size": 20000, "sort": "asc"}
-    r = requests.get(BASE, params=params, timeout=60)
-    r.raise_for_status()
+    derniere = None
+    r = None
+    for _ in range(3):
+        try:
+            r = requests.get(BASE, params=params, timeout=(10, 90))
+            r.raise_for_status()
+            break
+        except requests.RequestException as e:
+            derniere = e
+            r = None
+    if r is None:
+        raise derniere
     out = []
     for o in r.json().get("data", []):
         if o.get("resultat_obs") is None:
