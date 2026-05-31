@@ -1,10 +1,9 @@
 :root {
-  --bg: #0e1726;
-  --carte: #16223a;
-  --texte: #e6edf6;
-  --sub: #8da2bd;
-  --accent: #4aa3ff;
-  --danger: #c0392b;
+  --carte: rgba(10, 61, 68, 0.72);
+  --texte: #eafdfb;
+  --sub: #93c6c4;
+  --accent: #1fd1c6;
+  --danger: #ff6b5e;
 }
 
 * { box-sizing: border-box; }
@@ -12,7 +11,9 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: var(--bg);
+  background: linear-gradient(170deg, #053b46 0%, #0a5d63 55%, #0e7a6e 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
   color: var(--texte);
 }
 
@@ -36,9 +37,18 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 
 .carte {
   background: var(--carte);
-  border-radius: 12px;
+  border: 1px solid rgba(31, 209, 198, 0.18);
+  border-radius: 14px;
   padding: 14px 16px;
   margin: 12px 0;
+  backdrop-filter: blur(3px);
+}
+
+header h1 {
+  background: linear-gradient(90deg, #2fe6c0, #58d3ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .carte h2 { margin: 0 0 8px; font-size: 1.05rem; }
@@ -89,7 +99,7 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 
 .tide-graph { width: 100%; height: 88px; display: block; margin: 4px 0 10px; }
 .tg-line { fill: none; stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-.tg-area { fill: rgba(74, 163, 255, 0.15); stroke: none; }
+.tg-area { fill: rgba(31, 209, 198, 0.18); stroke: none; }
 .tg-cursor { stroke: #fff; stroke-width: 1; vector-effect: non-scaling-stroke; opacity: 0.8; }
 .tg-dot { fill: #fff; }
 
