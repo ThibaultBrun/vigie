@@ -55,7 +55,7 @@ const meteo = computed(() => data.value?.meteo)
 const notes = computed(() => data.value?.notes || [])
 const webcam = computed(() => data.value?.webcam)
 
-const HEURES = 48
+const HEURES = 7 * 24
 
 const pas = ref(0)
 const futur = computed(() => pas.value > 0)
@@ -70,20 +70,26 @@ const baseHeureMs = computed(() => {
 
 const cibleMs = computed(() => (pas.value === 0 ? Date.now() : baseHeureMs.value + (pas.value - 1) * 3600000))
 
-function prefixeJour(d) {
+function estAujourdhui(d) {
   const j0 = new Date(); j0.setHours(0, 0, 0, 0)
   const jd = new Date(d); jd.setHours(0, 0, 0, 0)
-  const n = Math.round((jd - j0) / 86400000)
-  if (n === 0) return ''
-  if (n === 1) return 'demain '
-  if (n === 2) return 'après-demain '
-  return new Date(d).toLocaleDateString('fr-FR', { weekday: 'short' }) + ' '
+  return jd.getTime() === j0.getTime()
+}
+
+function jourDate(d) {
+  const dt = new Date(d)
+  const j = dt.toLocaleDateString('fr-FR', { weekday: 'long' })
+  return `${j} ${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}`
+}
+
+function prefixeJour(d) {
+  return estAujourdhui(d) ? '' : jourDate(d) + ' '
 }
 
 const cibleLabel = computed(() => {
   const d = new Date(cibleMs.value)
-  const p = prefixeJour(d) || 'aujourd’hui '
-  return `${p}${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const p = estAujourdhui(d) ? 'aujourd’hui' : jourDate(d)
+  return `${p} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 })
 
 const cibleDateStr = computed(() => {
@@ -146,11 +152,14 @@ const VB_H = 90
 const graph = computed(() => {
   const c = maree.value?.courbe || []
   if (c.length < 2) return null
-  const t0 = Date.now()
-  const t1 = t0 + HEURES * 3600000
-  const pts = c
-    .map((p) => ({ t: new Date(p.heure_locale).getTime(), h: p.niveau_m }))
-    .filter((p) => p.t >= t0 - 3600000 && p.t <= t1 + 3600000)
+  const all = c.map((p) => ({ t: new Date(p.heure_locale).getTime(), h: p.niveau_m }))
+  const dStart = all[0].t
+  const dEnd = all[all.length - 1].t
+  const FEN = 48 * 3600000
+  let t0 = Math.max(dStart, cibleMs.value - 12 * 3600000)
+  let t1 = Math.min(dEnd, t0 + FEN)
+  t0 = Math.max(dStart, t1 - FEN)
+  const pts = all.filter((p) => p.t >= t0 - 3600000 && p.t <= t1 + 3600000)
   if (pts.length < 2) return null
   const hs = pts.map((p) => p.h)
   const hmin = Math.min(...hs)
