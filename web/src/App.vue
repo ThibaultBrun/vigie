@@ -73,9 +73,13 @@ const notes = computed(() => data.value?.notes || [])
           <span class="k">PM / BM du jour</span><span class="stale">à venir (harmonique)</span>
         </div>
         <div class="ligne" v-for="(p, i) in maree.pm_bm" :key="i">
-          <span class="k">{{ p.type }}</span><span class="v">{{ fmtH(p.heure_locale) }} ({{ p.hauteur_m }} m)</span>
+          <span class="k">{{ p.type === 'PM' ? 'Pleine mer' : 'Basse mer' }}</span><span class="v">{{ fmtH(p.heure_locale) }} ({{ p.hauteur_m }} m)</span>
         </div>
-        <div class="horo">{{ maree.source_niveau }} · {{ fmt(maree.horodatage_niveau) }}</div>
+        <div class="horo">{{ maree.source_niveau }} · niveau observé {{ fmt(maree.horodatage_niveau) }}</div>
+        <details class="methode" v-if="maree.methode_pm_bm">
+          <summary>Décalage estuaire & méthode</summary>
+          <p>{{ maree.methode_pm_bm }}</p>
+        </details>
       </template>
       <p v-else class="stale">Donnée indisponible</p>
     </section>

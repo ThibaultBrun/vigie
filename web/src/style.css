@@ -58,6 +58,10 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 
 .notes { color: #e0a24a; font-size: 0.8rem; margin: 8px 0; }
 
+.methode { margin-top: 10px; }
+.methode summary { color: var(--accent); font-size: 0.78rem; cursor: pointer; }
+.methode p { color: var(--sub); font-size: 0.76rem; line-height: 1.4; margin: 6px 0 0; }
+
 footer { margin-top: 24px; }
 .sources { color: var(--sub); font-size: 0.75rem; }
 .disclaimer { color: var(--sub); font-size: 0.72rem; font-style: italic; }

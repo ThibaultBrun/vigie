@@ -1,7 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from .config import charger_site
-from .sources import hubeau, openmeteo
+from .sources import hubeau, openmeteo, tide_harmonic
 
 PARIS = ZoneInfo("Europe/Paris")
 
@@ -32,18 +32,33 @@ def _bloc(fn, site, notes, nom):
         return {"disponible": False}
 
 
+METHODE_PM_BM = (
+    "Heures estimées par analyse harmonique (utide) sur ~30 jours de mesures du "
+    "marégraphe de Pont Blanc. Le marégraphe est en estuaire : la marée y arrive plus "
+    "tard et atténuée par rapport au port de Boucau-Bayonne, et ce décalage varie avec "
+    "le débit de la Nive et le coefficient. Caler le modèle sur Pont Blanc lui-même "
+    "intègre nativement ce retard local. Le niveau observé reste prioritaire pour "
+    "l'instant présent ; les résidus liés au débit ne sont pas corrigés."
+)
+
+
 def _maree(site):
     cfg = site["maree"]
     obs = hubeau.niveau_observe(cfg["station_observee"], cfg["station_nom"])
     if obs is None:
         return {"disponible": False}
+    try:
+        pm_bm = tide_harmonic.pm_bm_jour(cfg["station_observee"], site["lat"]) or []
+    except Exception:
+        pm_bm = []
     return {
         "disponible": True,
         "phase": obs["phase"],
         "niveau_observe_m": obs["niveau_m"],
         "source_niveau": obs["source"],
         "horodatage_niveau": obs["horodatage"],
-        "pm_bm": [],
+        "pm_bm": pm_bm,
+        "methode_pm_bm": METHODE_PM_BM,
         "coefficient": None,
         "source_coef": cfg.get("port_coef"),
     }
