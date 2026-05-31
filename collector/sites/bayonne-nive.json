@@ -1,8 +1,8 @@
 {
   "id": "bayonne-nive",
   "nom": "Bayonne – Aviron Bayonnais (Nive)",
-  "lat": 43.48946,
-  "lon": -1.46661,
+  "lat": 43.4866028,
+  "lon": -1.4751335,
   "maree": {
     "station_observee": "Q935251001",
     "station_nom": "Pont Blanc",
