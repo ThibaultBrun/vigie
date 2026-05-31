@@ -11,7 +11,7 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: linear-gradient(170deg, #053b46 0%, #0a5d63 55%, #0e7a6e 100%);
+  background: linear-gradient(170deg, #04303f 0%, #0a6a8c 52%, #14a6c4 100%);
   background-attachment: fixed;
   min-height: 100vh;
   color: var(--texte);
