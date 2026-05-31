@@ -70,6 +70,17 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 
 .planif { border: 1px solid #2a3c5a; }
 .orage-ligne .v { color: #ff9c9c; font-weight: 700; }
+
+.tbar { border: 1px solid #2a3c5a; position: sticky; top: 6px; z-index: 5; }
+.tbar-head { display: flex; align-items: center; justify-content: space-between; }
+.tbar-label { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+.tbar-hint { color: var(--sub); font-size: 0.72rem; margin-top: 4px; }
+
+.grise { opacity: 0.5; filter: grayscale(0.85); }
+.tag-prev { font-size: 0.7rem; background: #234a6b; color: #9cd1ff; padding: 2px 7px; border-radius: 7px; font-weight: normal; vertical-align: middle; }
+.tag-nonprev { font-size: 0.7rem; background: #5a3a1f; color: #f0c98a; padding: 2px 7px; border-radius: 7px; font-weight: normal; vertical-align: middle; }
+.note-nonprev { color: #e0a24a; font-size: 0.75rem; margin-top: 8px; }
+.cj-sel { outline: 2px solid var(--accent); }
 .planif-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .planif-heure { font-size: 1.7rem; font-weight: 700; color: var(--accent); }
 .btn-now { background: var(--accent); color: #06243f; border: none; border-radius: 8px; padding: 6px 12px; font-weight: 600; cursor: pointer; }

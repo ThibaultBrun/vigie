@@ -25,6 +25,10 @@ function dShort(iso) {
   return `${p[2]}/${p[1]}`
 }
 
+function pad(n) {
+  return String(n).padStart(2, '0')
+}
+
 async function charger() {
   try {
     const r = await fetch(`data/${SITE}.json`, { cache: 'no-store' })
@@ -51,31 +55,11 @@ const meteo = computed(() => data.value?.meteo)
 const notes = computed(() => data.value?.notes || [])
 const webcam = computed(() => data.value?.webcam)
 
-const jauge = computed(() => {
-  const d = debit.value
-  if (!d?.disponible || !d.echelle || d.echelle.min_m3s == null) return null
-  const e = d.echelle
-  const tf = (x) => {
-    const r = Math.max(0, Math.min(1, (x - e.min_m3s) / (e.max_m3s - e.min_m3s)))
-    return Math.sqrt(r) * 100
-  }
-  const t = tf(e.seuil_tranquille_m3s)
-  const f = tf(e.seuil_fort_m3s)
-  const gradient = `linear-gradient(90deg, #2e8b57 0%, #59b06f ${(t * 0.6).toFixed(1)}%, #e8c84a ${t.toFixed(1)}%, #d98a3a ${((t + f) / 2).toFixed(1)}%, #c0392b ${f.toFixed(1)}%, #8a2020 100%)`
-  return {
-    gradient,
-    curseur: tf(d.valeur_m3s),
-    hors: d.valeur_m3s > e.max_m3s,
-    min: e.min_m3s,
-    max: e.max_m3s,
-  }
-})
-
 const NAV_LABEL = { tranquille: 'Tranquille', moyen: 'Ça pousse', fort: 'Fort courant' }
-
 const HORIZON_MIN = 48 * 60
 
 const minutesFutur = ref(0)
+const futur = computed(() => minutesFutur.value > 0)
 const cibleMs = computed(() => Date.now() + minutesFutur.value * 60000)
 
 function prefixeJour(d) {
@@ -90,10 +74,13 @@ function prefixeJour(d) {
 
 const cibleLabel = computed(() => {
   const d = new Date(cibleMs.value)
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
   const p = prefixeJour(d) || 'aujourd’hui '
-  return `${p}${hh}:${mm}`
+  return `${p}${pad(d.getHours())}:${pad(d.getMinutes())}`
+})
+
+const cibleDateStr = computed(() => {
+  const d = new Date(cibleMs.value)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 })
 
 function plusProche(liste) {
@@ -110,6 +97,55 @@ function plusProche(liste) {
 const mareeSel = computed(() => plusProche(maree.value?.courbe))
 const ventSel = computed(() => plusProche(meteo.value?.evolution_horaire))
 
+const mareeVue = computed(() => {
+  const m = maree.value
+  if (!m || !m.disponible) return null
+  if (!futur.value) return { niveau: m.niveau_observe_m, phase: m.phase, label: 'observé' }
+  const s = mareeSel.value
+  if (!s) return { niveau: m.niveau_observe_m, phase: m.phase, label: 'observé' }
+  return { niveau: s.niveau_m, phase: s.phase, label: 'prévu' }
+})
+
+const meteoVue = computed(() => {
+  const m = meteo.value
+  if (!m || !m.disponible) return null
+  const s = futur.value ? ventSel.value : m
+  if (!s) return null
+  return {
+    vent_kmh: s.vent_kmh, vent_dir: s.vent_dir, rafales_kmh: s.rafales_kmh,
+    temp_c: s.temp_c, cloud_cover_pct: s.cloud_cover_pct, ciel: s.ciel,
+    pluie_mm: s.pluie_mm, pluie_proba: s.pluie_proba, orage: s.orage,
+  }
+})
+
+const coefVue = computed(() => {
+  const jours = maree.value?.coefficients_jours || []
+  const f = jours.find((j) => j.date === cibleDateStr.value)
+  return f ? f.coefficients : (maree.value?.coefficients_jour || [])
+})
+
+const coucherVue = computed(() => {
+  const m = meteo.value
+  if (!m) return null
+  const arr = m.coucher_soleil_jours || []
+  const f = arr.find((c) => (c.date || '').slice(0, 10) === cibleDateStr.value)
+  return f ? f.heure : m.coucher_soleil_local
+})
+
+const jauge = computed(() => {
+  const d = debit.value
+  if (!d?.disponible || !d.echelle || d.echelle.min_m3s == null) return null
+  const e = d.echelle
+  const tf = (x) => {
+    const r = Math.max(0, Math.min(1, (x - e.min_m3s) / (e.max_m3s - e.min_m3s)))
+    return Math.sqrt(r) * 100
+  }
+  const t = tf(e.seuil_tranquille_m3s)
+  const f = tf(e.seuil_fort_m3s)
+  const gradient = `linear-gradient(90deg, #2e8b57 0%, #59b06f ${(t * 0.6).toFixed(1)}%, #e8c84a ${t.toFixed(1)}%, #d98a3a ${((t + f) / 2).toFixed(1)}%, #c0392b ${f.toFixed(1)}%, #8a2020 100%)`
+  return { gradient, curseur: tf(d.valeur_m3s), hors: d.valeur_m3s > e.max_m3s, min: e.min_m3s, max: e.max_m3s }
+})
+
 const prochainesMarees = computed(() => {
   const now = Date.now() - 1800000
   return (maree.value?.pm_bm || [])
@@ -124,54 +160,36 @@ const prochainesMarees = computed(() => {
   <template v-if="data">
     <header>
       <h1>{{ point.nom }}</h1>
-      <p class="sub">Mis à jour : {{ fmt(data.horodatage) }}</p>
+      <p class="sub">Données réelles : {{ fmt(data.horodatage) }}</p>
     </header>
 
     <div v-if="danger && danger.actif && danger.messages.length" class="danger">
       ⚠️ {{ danger.messages.join(' · ') }}
     </div>
 
-    <section class="carte planif" v-if="mareeSel || ventSel">
-      <h2>🕐 Prévision (jusqu'à 48 h)</h2>
-      <div class="planif-head">
-        <span class="planif-heure">{{ cibleLabel }}</span>
-        <button class="btn-now" @click="minutesFutur = 0">Maintenant</button>
+    <section class="carte tbar">
+      <div class="tbar-head">
+        <span class="tbar-label">{{ futur ? cibleLabel : '🕐 Maintenant' }}</span>
+        <button class="btn-now" v-if="futur" @click="minutesFutur = 0">↩ Maintenant</button>
       </div>
       <input class="slider" type="range" min="0" :max="HORIZON_MIN" step="15" v-model.number="minutesFutur" />
-      <div class="ligne" v-if="mareeSel">
-        <span class="k">🌊 Marée prévue</span>
-        <span class="v">{{ mareeSel.niveau_m }} m · {{ mareeSel.phase }}</span>
+      <div class="tbar-hint">
+        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter jusqu’à 48 h' }}
       </div>
-      <div class="ligne" v-if="ventSel">
-        <span class="k">💨 Vent prévu</span>
-        <span class="v">{{ ventSel.vent_dir }} {{ ventSel.vent_kmh }} km/h · raf. {{ ventSel.rafales_kmh }}</span>
-      </div>
-      <div class="ligne" v-if="ventSel && ventSel.temp_c != null">
-        <span class="k">🌡️ Temp / nuages</span>
-        <span class="v">{{ ventSel.temp_c }} °C · {{ ventSel.cloud_cover_pct }} %</span>
-      </div>
-      <div class="ligne" v-if="ventSel && ventSel.pluie_mm > 0">
-        <span class="k">🌧️ Pluie</span>
-        <span class="v">{{ ventSel.pluie_mm }} mm<template v-if="ventSel.pluie_proba != null"> · {{ ventSel.pluie_proba }} %</template></span>
-      </div>
-      <div class="ligne orage-ligne" v-if="ventSel && ventSel.orage">
-        <span class="k">⛈️ Orage</span><span class="v">prévu à cette heure</span>
-      </div>
-      <div class="horo">Marée : modèle harmonique · Vent/pluie/orage : prévision Open-Meteo · le débit n'est pas prévu (voir valeur actuelle ci-dessous).</div>
     </section>
 
     <section class="carte">
-      <h2>🌊 Marée</h2>
-      <template v-if="maree.disponible">
-        <div class="ligne"><span class="k">Phase</span><span class="v">{{ maree.phase }}</span></div>
-        <div class="ligne"><span class="k">Niveau observé</span><span class="v">{{ maree.niveau_observe_m }} m</span></div>
+      <h2>🌊 Marée <span class="tag-prev" v-if="futur">prévue</span></h2>
+      <template v-if="mareeVue">
+        <div class="ligne"><span class="k">Phase</span><span class="v">{{ mareeVue.phase }}</span></div>
+        <div class="ligne"><span class="k">Niveau {{ mareeVue.label }}</span><span class="v">{{ mareeVue.niveau }} m</span></div>
         <div class="ligne">
           <span class="k">Coefficient</span>
-          <span class="v" v-if="maree.coefficients_jour && maree.coefficients_jour.length">{{ maree.coefficients_jour.join(' / ') }} <span class="cf-src">({{ maree.source_coef }})</span></span>
+          <span class="v" v-if="coefVue.length">{{ coefVue.join(' / ') }} <span class="cf-src">({{ maree.source_coef }})</span></span>
           <span class="stale" v-else>indisponible</span>
         </div>
         <div class="coef7" v-if="maree.coefficients_jours && maree.coefficients_jours.length">
-          <div class="cj" v-for="(j, i) in maree.coefficients_jours" :key="i">
+          <div class="cj" :class="{ 'cj-sel': j.date === cibleDateStr }" v-for="(j, i) in maree.coefficients_jours" :key="i">
             <span class="cj-d">{{ dShort(j.date) }}</span>
             <span class="cj-c">{{ j.coefficients.length ? Math.max(...j.coefficients) : '—' }}</span>
           </div>
@@ -183,7 +201,6 @@ const prochainesMarees = computed(() => {
           <span class="k">{{ p.type === 'PM' ? 'Pleine mer' : 'Basse mer' }}</span>
           <span class="v">{{ prefixeJour(p.heure_locale) }}{{ fmtH(p.heure_locale) }} ({{ p.hauteur_m }} m)</span>
         </div>
-        <div class="horo">{{ maree.source_niveau }} · niveau observé {{ fmt(maree.horodatage_niveau) }}</div>
         <details class="methode" v-if="maree.methode_pm_bm">
           <summary>Décalage estuaire & méthode</summary>
           <p>{{ maree.methode_pm_bm }}</p>
@@ -192,15 +209,14 @@ const prochainesMarees = computed(() => {
       <p v-else class="stale">Donnée indisponible</p>
     </section>
 
-    <section class="carte">
-      <h2>💧 Débit Nive</h2>
+    <section class="carte" :class="{ grise: futur }">
+      <h2>💧 Débit Nive <span class="tag-nonprev" v-if="futur">non prévu</span></h2>
       <template v-if="debit.disponible">
         <div class="ligne"><span class="k">Débit</span><span class="v">{{ debit.valeur_m3s }} m³/s</span></div>
         <div class="ligne" v-if="debit.navigation && debit.navigation.niveau">
           <span class="k">Navigation pirogue</span>
           <span class="v"><span class="nav-badge" :class="debit.navigation.niveau">{{ NAV_LABEL[debit.navigation.niveau] }}</span></span>
         </div>
-
         <div class="jauge" v-if="jauge">
           <div class="jauge-bar" :style="{ background: jauge.gradient }">
             <div class="curseur" :style="{ left: jauge.curseur + '%' }"></div>
@@ -211,7 +227,6 @@ const prochainesMarees = computed(() => {
             <span>{{ jauge.max }}+ m³/s</span>
           </div>
         </div>
-
         <div class="ligne"><span class="k">Médian / module</span><span class="v">{{ debit.reperes.mediane_m3s }} / {{ debit.reperes.module_m3s }} m³/s</span></div>
         <div class="horo">{{ debit.source }} · {{ fmt(debit.horodatage) }}</div>
         <details class="methode" v-if="debit.navigation && debit.navigation.note">
@@ -220,19 +235,27 @@ const prochainesMarees = computed(() => {
         </details>
       </template>
       <p v-else class="stale">Donnée indisponible</p>
+      <div class="note-nonprev" v-if="futur">Le débit n’est pas prévisible — valeur actuelle affichée.</div>
     </section>
 
     <section class="carte">
-      <h2>🌤️ Météo</h2>
-      <template v-if="meteo.disponible">
-        <div class="ligne"><span class="k">Vent</span><span class="v">{{ meteo.vent_dir }} {{ meteo.vent_kmh }} km/h</span></div>
-        <div class="ligne"><span class="k">Rafales</span><span class="v">{{ meteo.rafales_kmh }} km/h</span></div>
-        <div class="ligne"><span class="k">Température</span><span class="v">{{ meteo.temp_c }} °C</span></div>
-        <div class="ligne"><span class="k">Nuages</span><span class="v">{{ meteo.cloud_cover_pct }} %</span></div>
-        <div class="ligne" v-if="meteo.ciel"><span class="k">Ciel</span><span class="v">{{ meteo.ciel }}</span></div>
-        <div class="ligne" v-if="meteo.pluie_mm > 0"><span class="k">Pluie</span><span class="v">{{ meteo.pluie_mm }} mm</span></div>
-        <div class="ligne"><span class="k">Coucher du soleil</span><span class="v">{{ fmtH(meteo.coucher_soleil_local) }}</span></div>
-        <div class="horo">Open-Meteo · {{ fmt(meteo.horodatage) }}</div>
+      <h2>🌤️ Météo <span class="tag-prev" v-if="futur">prévue</span></h2>
+      <template v-if="meteoVue">
+        <div class="ligne"><span class="k">Vent</span><span class="v">{{ meteoVue.vent_dir }} {{ meteoVue.vent_kmh }} km/h</span></div>
+        <div class="ligne"><span class="k">Rafales</span><span class="v">{{ meteoVue.rafales_kmh }} km/h</span></div>
+        <div class="ligne"><span class="k">Température</span><span class="v">{{ meteoVue.temp_c }} °C</span></div>
+        <div class="ligne"><span class="k">Nuages</span><span class="v">{{ meteoVue.cloud_cover_pct }} %</span></div>
+        <div class="ligne" v-if="meteoVue.ciel"><span class="k">Ciel</span><span class="v">{{ meteoVue.ciel }}</span></div>
+        <div class="ligne" v-if="meteoVue.pluie_mm > 0">
+          <span class="k">Pluie</span>
+          <span class="v">{{ meteoVue.pluie_mm }} mm<template v-if="meteoVue.pluie_proba != null"> · {{ meteoVue.pluie_proba }} %</template></span>
+        </div>
+        <div class="ligne orage-ligne" v-if="meteoVue.orage">
+          <span class="k">⛈️ Orage</span><span class="v">{{ futur ? 'prévu à cette heure' : 'en cours' }}</span>
+        </div>
+        <div class="ligne"><span class="k">Coucher du soleil</span><span class="v">{{ fmtH(coucherVue) }}</span></div>
+        <div class="horo" v-if="!futur">Open-Meteo · {{ fmt(meteo.horodatage) }}</div>
+        <div class="horo" v-else>Prévision Open-Meteo</div>
       </template>
       <p v-else class="stale">Donnée indisponible</p>
     </section>
@@ -241,8 +264,8 @@ const prochainesMarees = computed(() => {
       <div v-for="(n, i) in notes" :key="i">• {{ n }}</div>
     </div>
 
-    <section class="carte cam" v-if="webcam && webcam.disponible">
-      <h2>🎥 Webcam <span class="cam-tag">secondaire</span></h2>
+    <section class="carte cam" :class="{ grise: futur }" v-if="webcam && webcam.disponible">
+      <h2>🎥 Webcam <span class="cam-tag">{{ futur ? 'instant présent' : 'secondaire' }}</span></h2>
       <a :href="webcam.page_url" target="_blank" rel="noopener">
         <img :src="webcam.image_url" :alt="webcam.nom" class="cam-img" loading="lazy" />
       </a>
@@ -251,6 +274,7 @@ const prochainesMarees = computed(() => {
         <a :href="webcam.page_url" target="_blank" rel="noopener">voir en direct</a>
         <span v-if="webcam.horodatage"> · capture {{ fmt(webcam.horodatage) }}</span>
       </div>
+      <div class="note-nonprev" v-if="futur">Image en direct — pas de projection dans le futur.</div>
     </section>
 
     <footer>

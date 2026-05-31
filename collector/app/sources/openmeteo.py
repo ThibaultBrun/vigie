@@ -54,6 +54,8 @@ def meteo(lat, lon):
     daily = d.get("daily", {})
     hourly = d.get("hourly", {})
     sunset = daily.get("sunset", [None])
+    sdates = daily.get("time", [])
+    couchers = [{"date": sdates[i], "heure": sunset[i]} for i in range(min(len(sdates), len(sunset)))]
     return {
         "vent_kmh": c.get("wind_speed_10m"),
         "vent_dir": _dir(c.get("wind_direction_10m")),
@@ -65,6 +67,7 @@ def meteo(lat, lon):
         "ciel": _ciel(c.get("weather_code")),
         "orage": _orage(c.get("weather_code")),
         "coucher_soleil_local": sunset[0] if sunset else None,
+        "coucher_soleil_jours": couchers,
         "horodatage": c.get("time"),
         "evolution_horaire": _evolution(hourly),
     }
