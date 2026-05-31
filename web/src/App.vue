@@ -166,9 +166,13 @@ const graph = computed(() => {
   const c = maree.value?.courbe || []
   if (c.length < 2) return null
   const all = c.map((p) => ({ t: new Date(p.heure_locale).getTime(), h: p.niveau_m }))
-  const t0 = Date.now()
-  const t1 = all[all.length - 1].t
-  const pts = all.filter((p) => p.t >= t0 - 1800000 && p.t <= t1)
+  const dStart = all[0].t
+  const dEnd = all[all.length - 1].t
+  const FEN = 27 * 3600000
+  let t0 = Math.max(dStart, cibleMs.value - 4 * 3600000)
+  let t1 = Math.min(dEnd, t0 + FEN)
+  t0 = Math.max(dStart, t1 - FEN)
+  const pts = all.filter((p) => p.t >= t0 - 1800000 && p.t <= t1 + 1800000)
   if (pts.length < 2) return null
   const hs = pts.map((p) => p.h)
   const hmin = Math.min(...hs)
