@@ -50,15 +50,17 @@ const jauge = computed(() => {
   const d = debit.value
   if (!d?.disponible || !d.echelle || d.echelle.min_m3s == null) return null
   const e = d.echelle
-  const span = e.max_m3s - e.min_m3s
-  const pct = (x) => Math.max(0, Math.min(100, ((x - e.min_m3s) / span) * 100))
-  const t = pct(e.seuil_tranquille_m3s)
-  const f = pct(e.seuil_fort_m3s)
-  const gradient = `linear-gradient(90deg, #2e8b57 0%, #59b06f ${(t * 0.55).toFixed(1)}%, #e8c84a ${t.toFixed(1)}%, #d98a3a ${((t + f) / 2).toFixed(1)}%, #c0392b ${f.toFixed(1)}%, #8a2020 100%)`
+  const tf = (x) => {
+    const r = Math.max(0, Math.min(1, (x - e.min_m3s) / (e.max_m3s - e.min_m3s)))
+    return Math.sqrt(r) * 100
+  }
+  const t = tf(e.seuil_tranquille_m3s)
+  const f = tf(e.seuil_fort_m3s)
+  const gradient = `linear-gradient(90deg, #2e8b57 0%, #59b06f ${(t * 0.6).toFixed(1)}%, #e8c84a ${t.toFixed(1)}%, #d98a3a ${((t + f) / 2).toFixed(1)}%, #c0392b ${f.toFixed(1)}%, #8a2020 100%)`
   return {
     gradient,
-    curseur: (e.position ?? 0) * 100,
-    hors: e.hors_echelle,
+    curseur: tf(d.valeur_m3s),
+    hors: d.valeur_m3s > e.max_m3s,
     min: e.min_m3s,
     max: e.max_m3s,
   }
