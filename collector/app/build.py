@@ -85,7 +85,7 @@ def _phase_maintenant(obs_phase, pm_bm, horodatage_niveau):
     t = datetime.fromisoformat(horodatage_niveau)
     for p in pm_bm:
         pt = datetime.fromisoformat(p["heure_locale"])
-        if abs((pt - t).total_seconds()) <= 1800:
+        if abs((pt - t).total_seconds()) <= 2700:
             return "étale haute" if p["type"] == "PM" else "étale basse"
     return obs_phase
 

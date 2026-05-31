@@ -65,7 +65,7 @@ def analyser(code_station, lat):
             extrema.append((i, "BM"))
     pm_bm = [{"type": typ, "heure_locale": _local_iso(grille, i), "hauteur_m": round(float(hp[i]), 2)} for i, typ in extrema]
 
-    fenetre = 6
+    fenetre = 9
     courbe = []
     n = len(hp)
     for i in range(0, n, 3):
