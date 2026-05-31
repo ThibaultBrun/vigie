@@ -57,20 +57,26 @@ def analyser(code_station, lat):
     hp = np.asarray(rec.h, dtype=float)
 
     d = np.diff(hp)
-    pm_bm = []
+    extrema = []
     for i in range(1, len(d)):
         if d[i - 1] > 0 and d[i] <= 0:
-            typ = "PM"
+            extrema.append((i, "PM"))
         elif d[i - 1] < 0 and d[i] >= 0:
-            typ = "BM"
-        else:
-            continue
-        pm_bm.append({"type": typ, "heure_locale": _local_iso(grille, i), "hauteur_m": round(float(hp[i]), 2)})
+            extrema.append((i, "BM"))
+    pm_bm = [{"type": typ, "heure_locale": _local_iso(grille, i), "hauteur_m": round(float(hp[i]), 2)} for i, typ in extrema]
 
+    fenetre = 6
     courbe = []
     n = len(hp)
     for i in range(0, n, 3):
-        if i + 1 < n and hp[i + 1] > hp[i]:
+        proche, best = None, fenetre + 1
+        for idx, typ in extrema:
+            dd = abs(idx - i)
+            if dd < best:
+                best, proche = dd, typ
+        if proche is not None and best <= fenetre:
+            phase = "étale haute" if proche == "PM" else "étale basse"
+        elif i + 1 < n and hp[i + 1] > hp[i]:
             phase = "montante"
         elif i + 1 < n and hp[i + 1] < hp[i]:
             phase = "descendante"
@@ -79,7 +85,7 @@ def analyser(code_station, lat):
         elif i > 0 and hp[i] > hp[i - 1]:
             phase = "montante"
         else:
-            phase = "etale"
+            phase = "étale"
         courbe.append({"heure_locale": _local_iso(grille, i), "niveau_m": round(float(hp[i]), 2), "phase": phase})
 
     return {"pm_bm": pm_bm, "courbe": courbe}

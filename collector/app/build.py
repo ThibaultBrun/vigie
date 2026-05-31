@@ -55,9 +55,10 @@ def _maree(site):
         analyse = None
     pm_bm = analyse["pm_bm"] if analyse else []
     courbe = analyse["courbe"] if analyse else []
+    phase = _phase_maintenant(obs["phase"], pm_bm, obs["horodatage"])
     return {
         "disponible": True,
-        "phase": obs["phase"],
+        "phase": phase,
         "niveau_observe_m": obs["niveau_m"],
         "source_niveau": obs["source"],
         "horodatage_niveau": obs["horodatage"],
@@ -67,6 +68,18 @@ def _maree(site):
         "coefficient": None,
         "source_coef": cfg.get("port_coef"),
     }
+
+
+def _phase_maintenant(obs_phase, pm_bm, horodatage_niveau):
+    if not pm_bm or not horodatage_niveau:
+        return obs_phase
+    t = datetime.fromisoformat(horodatage_niveau)
+    tmin = t.hour * 60 + t.minute
+    for p in pm_bm:
+        pt = datetime.fromisoformat(p["heure_locale"])
+        if abs(pt.hour * 60 + pt.minute - tmin) <= 30:
+            return "étale haute" if p["type"] == "PM" else "étale basse"
+    return obs_phase
 
 
 def _debit(site):
