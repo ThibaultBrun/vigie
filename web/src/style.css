@@ -5,7 +5,6 @@
   --sub: #8da2bd;
   --accent: #4aa3ff;
   --danger: #c0392b;
-  --ok: #2e8b57;
 }
 
 * { box-sizing: border-box; }
@@ -15,10 +14,12 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   background: var(--bg);
   color: var(--texte);
+}
+
+#app {
   padding: 16px;
   max-width: 720px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
 }
 
 header h1 { margin: 0 0 4px; font-size: 1.4rem; }
@@ -32,8 +33,6 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
   margin: 16px 0;
   font-weight: 600;
 }
-
-.hidden { display: none; }
 
 .carte {
   background: var(--carte);
@@ -57,11 +56,7 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 .stale { color: #e0a24a; font-size: 0.8rem; }
 .horo { color: var(--sub); font-size: 0.75rem; margin-top: 6px; }
 
-.notes {
-  color: #e0a24a;
-  font-size: 0.8rem;
-  margin: 8px 0;
-}
+.notes { color: #e0a24a; font-size: 0.8rem; margin: 8px 0; }
 
 footer { margin-top: 24px; }
 .sources { color: var(--sub); font-size: 0.75rem; }

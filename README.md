@@ -4,25 +4,46 @@ Tableau de bord des conditions du moment à un point d'eau (marée, débit, mét
 Usage personnel non-commercial. N'émet aucun verdict de navigabilité : affiche des
 conditions brutes, avec un bandeau d'avertissement uniquement en cas de dangerosité.
 
-Architecture multisite : chaque zone est un fichier de config dans `backend/sites/`.
+Architecture multisite : chaque zone est un fichier de config dans `collector/sites/`.
 Site par défaut : `bayonne-nive` (Société Nautique de Bayonne, sur la Nive).
 
-## Stack
+## Architecture
 
-- Back-end Python (FastAPI) — impose par utide/pytides (maree harmonique) et
-  meteofrance-api (vigilance).
-- Front HTML/JS pur, sans build, lisible sur mobile.
-- Cache + cron de rafraichissement (a venir).
+Decouplee, sans serveur applicatif :
+
+- `collector/` — collecteur Python. Aspire les API, calcule (harmonique de maree,
+  vigilance) et ecrit le JSON cible dans `web/public/data/<site>.json`. Lance en cron.
+- `web/` — site Vite + Vue. Lit le JSON et l'affiche. Build statique, lisible sur mobile.
+- `.github/workflows/deploy.yml` — GitHub Actions : cron toutes les 15 min qui relance le
+  collecteur, rebuild le site et le deploie sur GitHub Pages. Aucune cle API, repo public.
+
+Python est impose par utide/pytides (maree harmonique) et meteofrance-api (vigilance).
 
 ## Lancer en local
 
+Collecteur (genere le JSON dans web/public/data) :
+
 ```
-cd backend
+cd collector
 python -m pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
+python collect.py
 ```
 
-Puis ouvrir http://127.0.0.1:8000/ — l'API est sur `/api/conditions?site=bayonne-nive`.
+Site :
+
+```
+cd web
+npm install
+npm run dev
+```
+
+## Deploiement (GitHub Pages)
+
+1. Pousser le repo (public) sur GitHub.
+2. Settings > Pages > Source : GitHub Actions.
+3. Le workflow build + deploie a chaque push et toutes les 15 min (cron).
+
+Le timing du cron GitHub Actions est approximatif (peut decaler de plusieurs minutes).
 
 ## Sources de donnees
 
@@ -33,13 +54,14 @@ Puis ouvrir http://127.0.0.1:8000/ — l'API est sur `/api/conditions?site=bayon
 - PM/BM du jour : analyse harmonique utide sur serie longue Pont Blanc — a integrer.
 - Vigilance : meteofrance-api, departement 64 — a integrer.
 
-## Etat v1
+## Etat
 
-Fait : niveau marée observé + phase, débit + palier, météo courante + évolution horaire,
-bandeau danger (débit élevé), schéma JSON cible, archi multisite, robustesse par bloc.
+Fait : pivot archi collecteur + Vite/Vue + GitHub Actions/Pages, niveau marée observé +
+phase, débit + palier, météo courante + évolution horaire, bandeau danger (débit élevé),
+schéma JSON cible, archi multisite, robustesse par bloc.
 
 A faire (par ordre) : calibration paliers débit Cambo (médian/QMNA5 reels via HydroPortail),
-coefficient SHOM, PM/BM harmonique (utide), vigilance Météo-France, cache persistant + cron.
+coefficient SHOM, PM/BM harmonique (utide), vigilance Météo-France.
 
 ## Licences / citations
 

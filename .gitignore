@@ -6,3 +6,8 @@ venv/
 *.db
 .env
 .DS_Store
+
+node_modules/
+dist/
+web/public/data/*.json
+*.log
