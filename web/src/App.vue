@@ -352,7 +352,8 @@ const remontee = computed(() => {
           </div>
         </div>
         <div class="ligne"><span class="k">Médian / module</span><span class="v">{{ debit.reperes.mediane_m3s }} / {{ debit.reperes.module_m3s }} m³/s</span></div>
-        <div class="horo">{{ debit.source }} · {{ fmt(debit.horodatage) }}</div>
+        <div class="ligne"><span class="k">Mesuré à</span><span class="v">{{ fmt(debit.horodatage) }}</span></div>
+        <div class="horo">{{ debit.source }}</div>
         <details class="methode" v-if="debit.navigation && debit.navigation.note">
           <summary>Seuils navigation</summary>
           <p>{{ debit.navigation.note }} Repères Nive à Cambo (1999–2026) : min connu {{ debit.reperes.min_connu_m3s }}, médian {{ debit.reperes.mediane_m3s }}, module {{ debit.reperes.module_m3s }}, max connu {{ debit.reperes.max_connu_m3s }} m³/s.</p>
