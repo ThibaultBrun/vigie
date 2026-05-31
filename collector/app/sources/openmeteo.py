@@ -19,7 +19,7 @@ def meteo(lat, lon):
         "daily": "sunset",
         "timezone": "Europe/Paris",
         "wind_speed_unit": "kmh",
-        "forecast_days": 1,
+        "forecast_days": 3,
     }
     r = requests.get(URL, params=params, timeout=20)
     r.raise_for_status()

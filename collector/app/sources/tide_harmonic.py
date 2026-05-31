@@ -47,7 +47,7 @@ def analyser(code_station, lat):
 
     maintenant = datetime.now(PARIS)
     debut = maintenant.replace(hour=0, minute=0, second=0, microsecond=0)
-    fin = debut + timedelta(days=1)
+    fin = debut + timedelta(days=3)
     grille = np.arange(
         np.datetime64(debut.astimezone(timezone.utc).replace(tzinfo=None), "s"),
         np.datetime64(fin.astimezone(timezone.utc).replace(tzinfo=None), "s"),

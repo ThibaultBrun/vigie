@@ -68,29 +68,35 @@ const jauge = computed(() => {
 
 const NAV_LABEL = { tranquille: 'Tranquille', moyen: 'Ça pousse', fort: 'Fort courant' }
 
-function minNow() {
-  const n = new Date()
-  return n.getHours() * 60 + n.getMinutes()
+const HORIZON_MIN = 48 * 60
+
+const minutesFutur = ref(0)
+const cibleMs = computed(() => Date.now() + minutesFutur.value * 60000)
+
+function prefixeJour(d) {
+  const j0 = new Date(); j0.setHours(0, 0, 0, 0)
+  const jd = new Date(d); jd.setHours(0, 0, 0, 0)
+  const n = Math.round((jd - j0) / 86400000)
+  if (n === 0) return ''
+  if (n === 1) return 'demain '
+  if (n === 2) return 'après-demain '
+  return new Date(d).toLocaleDateString('fr-FR', { weekday: 'short' }) + ' '
 }
 
-function minIso(iso) {
-  return parseInt(iso.slice(11, 13)) * 60 + parseInt(iso.slice(14, 16))
-}
-
-function fmtMin(m) {
-  const h = String(Math.floor(m / 60)).padStart(2, '0')
-  const mm = String(m % 60).padStart(2, '0')
-  return `${h}:${mm}`
-}
-
-const heureSel = ref(minNow())
+const cibleLabel = computed(() => {
+  const d = new Date(cibleMs.value)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  const p = prefixeJour(d) || 'aujourd’hui '
+  return `${p}${hh}:${mm}`
+})
 
 function plusProche(liste) {
   if (!liste || !liste.length) return null
   let best = liste[0]
   let bd = Infinity
   for (const p of liste) {
-    const dd = Math.abs(minIso(p.heure_locale) - heureSel.value)
+    const dd = Math.abs(new Date(p.heure_locale).getTime() - cibleMs.value)
     if (dd < bd) { bd = dd; best = p }
   }
   return best
@@ -98,6 +104,13 @@ function plusProche(liste) {
 
 const mareeSel = computed(() => plusProche(maree.value?.courbe))
 const ventSel = computed(() => plusProche(meteo.value?.evolution_horaire))
+
+const prochainesMarees = computed(() => {
+  const now = Date.now() - 1800000
+  return (maree.value?.pm_bm || [])
+    .filter((p) => new Date(p.heure_locale).getTime() >= now)
+    .slice(0, 5)
+})
 </script>
 
 <template>
@@ -114,12 +127,12 @@ const ventSel = computed(() => plusProche(meteo.value?.evolution_horaire))
     </div>
 
     <section class="carte planif" v-if="mareeSel || ventSel">
-      <h2>🕐 Prévision à une heure</h2>
+      <h2>🕐 Prévision (jusqu'à 48 h)</h2>
       <div class="planif-head">
-        <span class="planif-heure">{{ fmtMin(heureSel) }}</span>
-        <button class="btn-now" @click="heureSel = minNow()">Maintenant</button>
+        <span class="planif-heure">{{ cibleLabel }}</span>
+        <button class="btn-now" @click="minutesFutur = 0">Maintenant</button>
       </div>
-      <input class="slider" type="range" min="0" max="1439" step="15" v-model.number="heureSel" />
+      <input class="slider" type="range" min="0" :max="HORIZON_MIN" step="15" v-model.number="minutesFutur" />
       <div class="ligne" v-if="mareeSel">
         <span class="k">🌊 Marée prévue</span>
         <span class="v">{{ mareeSel.niveau_m }} m · {{ mareeSel.phase }}</span>
@@ -145,11 +158,12 @@ const ventSel = computed(() => plusProche(meteo.value?.evolution_horaire))
           <span class="v" v-if="maree.coefficient != null">{{ maree.coefficient }} ({{ maree.source_coef }})</span>
           <span class="stale" v-else>à venir</span>
         </div>
-        <div class="ligne" v-if="!maree.pm_bm.length">
-          <span class="k">PM / BM du jour</span><span class="stale">à venir (harmonique)</span>
+        <div class="ligne" v-if="!prochainesMarees.length">
+          <span class="k">Prochaines marées</span><span class="stale">à venir (harmonique)</span>
         </div>
-        <div class="ligne" v-for="(p, i) in maree.pm_bm" :key="i">
-          <span class="k">{{ p.type === 'PM' ? 'Pleine mer' : 'Basse mer' }}</span><span class="v">{{ fmtH(p.heure_locale) }} ({{ p.hauteur_m }} m)</span>
+        <div class="ligne" v-for="(p, i) in prochainesMarees" :key="i">
+          <span class="k">{{ p.type === 'PM' ? 'Pleine mer' : 'Basse mer' }}</span>
+          <span class="v">{{ prefixeJour(p.heure_locale) }}{{ fmtH(p.heure_locale) }} ({{ p.hauteur_m }} m)</span>
         </div>
         <div class="horo">{{ maree.source_niveau }} · niveau observé {{ fmt(maree.horodatage_niveau) }}</div>
         <details class="methode" v-if="maree.methode_pm_bm">
