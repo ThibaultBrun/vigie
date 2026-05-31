@@ -20,6 +20,7 @@
     "qix5_m3s": 530,
     "qix10_m3s": 620,
     "seuil_vigilance_m3s": 390,
+    "tendance_latlon": [43.358, -1.403],
     "navigation_pirogue": {
       "echelle_min_m3s": 3.6,
       "echelle_max_m3s": 60,

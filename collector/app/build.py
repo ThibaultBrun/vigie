@@ -1,7 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from .config import charger_site
-from .sources import hubeau, openmeteo, tide_harmonic, webcam, maree_coef
+from .sources import hubeau, openmeteo, tide_harmonic, webcam, maree_coef, debit_tendance
 
 PARIS = ZoneInfo("Europe/Paris")
 
@@ -96,6 +96,11 @@ def _debit(site):
     if d is None:
         return {"disponible": False}
     v = d["valeur_m3s"]
+    tl = cfg.get("tendance_latlon") or [site["lat"], site["lon"]]
+    try:
+        tend = debit_tendance.tendance(tl[0], tl[1])
+    except Exception:
+        tend = None
     nav = cfg.get("navigation_pirogue", {})
     emin = nav.get("echelle_min_m3s")
     emax = nav.get("echelle_max_m3s")
@@ -123,6 +128,7 @@ def _debit(site):
             "seuil_fort_m3s": nav.get("seuil_fort_m3s"),
         },
         "navigation": {"niveau": _nav(v, nav), "note": nav.get("note")},
+        "tendance": tend,
         "reperes": {
             "mediane_m3s": cfg.get("mediane_m3s"),
             "module_m3s": cfg.get("module_m3s"),

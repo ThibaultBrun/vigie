@@ -341,6 +341,10 @@ const remontee = computed(() => {
       <h2>💧 Débit Nive <span class="tag-nonprev" v-if="futur">non prévu</span></h2>
       <template v-if="debit.disponible">
         <div class="ligne"><span class="k">Débit</span><span class="v">{{ debit.valeur_m3s }} m³/s</span></div>
+        <div class="ligne" v-if="debit.tendance">
+          <span class="k">Tendance 7 j</span>
+          <span class="v">{{ { hausse: '📈 en hausse', stable: '➡️ stable', baisse: '📉 en baisse' }[debit.tendance.sens] }}</span>
+        </div>
         <div class="jauge" v-if="jauge">
           <div class="jauge-bar" :style="{ background: jauge.gradient }">
             <div class="curseur" :style="{ left: jauge.curseur + '%' }"></div>
@@ -354,6 +358,7 @@ const remontee = computed(() => {
         <div class="ligne"><span class="k">Médian / module</span><span class="v">{{ debit.reperes.mediane_m3s }} / {{ debit.reperes.module_m3s }} m³/s</span></div>
         <div class="ligne"><span class="k">Mesuré à</span><span class="v">{{ fmt(debit.horodatage) }}</span></div>
         <div class="horo">{{ debit.source }}</div>
+        <div class="horo" v-if="debit.tendance">Tendance : modèle GloFAS (Open-Meteo Flood) — sens d'évolution seulement, pas une valeur (imprécis sur petite rivière).</div>
         <details class="methode" v-if="debit.navigation && debit.navigation.note">
           <summary>Seuils navigation</summary>
           <p>{{ debit.navigation.note }} Repères Nive à Cambo (1999–2026) : min connu {{ debit.reperes.min_connu_m3s }}, médian {{ debit.reperes.mediane_m3s }}, module {{ debit.reperes.module_m3s }}, max connu {{ debit.reperes.max_connu_m3s }} m³/s.</p>
