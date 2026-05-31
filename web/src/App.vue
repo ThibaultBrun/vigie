@@ -55,7 +55,6 @@ const meteo = computed(() => data.value?.meteo)
 const notes = computed(() => data.value?.notes || [])
 const webcam = computed(() => data.value?.webcam)
 
-const NAV_LABEL = { tranquille: 'Tranquille', moyen: 'Ça pousse', fort: 'Fort courant' }
 const HORIZON_MIN = 48 * 60
 
 const minutesFutur = ref(0)
@@ -152,6 +151,52 @@ const prochainesMarees = computed(() => {
     .filter((p) => new Date(p.heure_locale).getTime() >= now)
     .slice(0, 2)
 })
+
+const NIVEAUX = {
+  1: { label: 'Tranquille', classe: 'tranquille' },
+  2: { label: 'Modéré', classe: 'moyen' },
+  3: { label: 'Soutenu', classe: 'soutenu' },
+  4: { label: 'Fort', classe: 'fort' },
+}
+
+const remontee = computed(() => {
+  const d = debit.value
+  const m = maree.value
+  if (!d?.disponible || !m?.disponible) return null
+  const v = d.valeur_m3s
+  const st = d.echelle?.seuil_tranquille_m3s ?? 15
+  const sf = d.echelle?.seuil_fort_m3s ?? 40
+  const riverLvl = v <= st ? 1 : (v >= sf ? 3 : 2)
+  const riverTxt = v <= st ? 'débit faible' : (v >= sf ? 'débit fort' : 'débit moyen')
+
+  const c = m.courbe || []
+  let slope = 0
+  if (c.length > 1) {
+    let bi = 0, bd = Infinity
+    for (let i = 0; i < c.length; i++) {
+      const dd = Math.abs(new Date(c[i].heure_locale).getTime() - cibleMs.value)
+      if (dd < bd) { bd = dd; bi = i }
+    }
+    const a = Math.min(bi, c.length - 2)
+    slope = (c[a + 1].niveau_m - c[a].niveau_m) * 4
+  }
+  const ph = (futur.value ? mareeSel.value?.phase : m.phase) || ''
+  const force = Math.abs(slope)
+  let adj = 0
+  let tideTxt = ''
+  if (ph.includes('étale') || force < 0.25) {
+    adj = 0
+    tideTxt = 'étale (courant de marée quasi nul)'
+  } else if (ph.includes('montante')) {
+    adj = force > 0.7 ? -2 : -1
+    tideTxt = 'flot' + (force > 0.7 ? ' fort' : '') + ' — la marée pousse vers l’amont (aide)'
+  } else {
+    adj = force > 0.7 ? 2 : 1
+    tideTxt = 'jusant' + (force > 0.7 ? ' fort' : '') + ' — la marée tire vers l’aval (gêne)'
+  }
+  const lvl = Math.max(1, Math.min(4, riverLvl + adj))
+  return { ...NIVEAUX[lvl], texte: `${riverTxt} + ${tideTxt}.` }
+})
 </script>
 
 <template>
@@ -176,6 +221,16 @@ const prochainesMarees = computed(() => {
       <div class="tbar-hint">
         {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter jusqu’à 48 h' }}
       </div>
+    </section>
+
+    <section class="carte" v-if="remontee">
+      <h2>🛶 Remontée pirogue <span class="tag-prev" v-if="futur">{{ cibleLabel }}</span></h2>
+      <div class="ligne">
+        <span class="k">Effort estimé</span>
+        <span class="v"><span class="nav-badge" :class="remontee.classe">{{ remontee.label }}</span></span>
+      </div>
+      <div class="horo">{{ remontee.texte }}</div>
+      <div class="note-nonprev">Estimation combinée débit + marée. Débit supposé = actuel ({{ debit.valeur_m3s }} m³/s, non prévu) ; effet marée calculé pour l’heure choisie.</div>
     </section>
 
     <section class="carte">
@@ -213,10 +268,6 @@ const prochainesMarees = computed(() => {
       <h2>💧 Débit Nive <span class="tag-nonprev" v-if="futur">non prévu</span></h2>
       <template v-if="debit.disponible">
         <div class="ligne"><span class="k">Débit</span><span class="v">{{ debit.valeur_m3s }} m³/s</span></div>
-        <div class="ligne" v-if="debit.navigation && debit.navigation.niveau">
-          <span class="k">Navigation pirogue</span>
-          <span class="v"><span class="nav-badge" :class="debit.navigation.niveau">{{ NAV_LABEL[debit.navigation.niveau] }}</span></span>
-        </div>
         <div class="jauge" v-if="jauge">
           <div class="jauge-bar" :style="{ background: jauge.gradient }">
             <div class="curseur" :style="{ left: jauge.curseur + '%' }"></div>

@@ -66,6 +66,7 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 .nav-badge { padding: 2px 8px; border-radius: 8px; font-size: 0.8rem; }
 .nav-badge.tranquille { background: #1f4d33; color: #9be7b4; }
 .nav-badge.moyen { background: #5a4a1f; color: #f0d68a; }
+.nav-badge.soutenu { background: #6b4423; color: #f0b27a; }
 .nav-badge.fort { background: #6b2424; color: #ff9c9c; }
 
 .planif { border: 1px solid #2a3c5a; }
