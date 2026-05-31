@@ -33,7 +33,7 @@ async function charger() {
 
 onMounted(() => {
   charger()
-  timer = setInterval(charger, 5 * 60 * 1000)
+  timer = setInterval(charger, 2 * 60 * 1000)
 })
 
 onUnmounted(() => clearInterval(timer))
