@@ -11,13 +11,21 @@
   "debit": {
     "station": "Q931251001",
     "station_nom": "Cambo-les-Bains",
-    "module_m3s": 30.2,
+    "module_m3s": 28.8,
+    "mediane_m3s": 16.9,
+    "min_connu_m3s": 3.59,
+    "max_connu_m3s": 843.05,
     "qix2_m3s": 390,
     "qix5_m3s": 530,
     "qix10_m3s": 620,
-    "mediane_m3s": null,
-    "qmna5_m3s": null,
-    "seuil_vigilance_m3s": null
+    "seuil_vigilance_m3s": 390,
+    "navigation_pirogue": {
+      "echelle_min_m3s": 3.6,
+      "echelle_max_m3s": 60,
+      "seuil_tranquille_m3s": 17,
+      "seuil_fort_m3s": 40,
+      "note": "Repères de navigabilité en pirogue (remontée de courant) : empiriques et provisoires, à ajuster selon ton ressenti. Ce ne sont PAS des données officielles."
+    }
   },
   "vigilance_departement": "64"
 }

@@ -66,11 +66,66 @@ def _maree(site):
 
 def _debit(site):
     cfg = site["debit"]
-    d = hubeau.debit(cfg["station"], cfg["station_nom"], cfg)
+    d = hubeau.debit(cfg["station"], cfg["station_nom"])
     if d is None:
         return {"disponible": False}
-    d["disponible"] = True
-    return d
+    v = d["valeur_m3s"]
+    nav = cfg.get("navigation_pirogue", {})
+    emin = nav.get("echelle_min_m3s")
+    emax = nav.get("echelle_max_m3s")
+    position = None
+    hors = False
+    if emin is not None and emax is not None and emax > emin:
+        p = (v - emin) / (emax - emin)
+        if p > 1:
+            p, hors = 1.0, True
+        if p < 0:
+            p = 0.0
+        position = round(p, 4)
+    return {
+        "disponible": True,
+        "valeur_m3s": v,
+        "palier": _palier(v, cfg),
+        "source": d["source"],
+        "horodatage": d["horodatage"],
+        "echelle": {
+            "min_m3s": emin,
+            "max_m3s": emax,
+            "position": position,
+            "hors_echelle": hors,
+            "seuil_tranquille_m3s": nav.get("seuil_tranquille_m3s"),
+            "seuil_fort_m3s": nav.get("seuil_fort_m3s"),
+        },
+        "navigation": {"niveau": _nav(v, nav), "note": nav.get("note")},
+        "reperes": {
+            "mediane_m3s": cfg.get("mediane_m3s"),
+            "module_m3s": cfg.get("module_m3s"),
+            "min_connu_m3s": cfg.get("min_connu_m3s"),
+            "max_connu_m3s": cfg.get("max_connu_m3s"),
+        },
+    }
+
+
+def _palier(v, cfg):
+    seuil = cfg.get("seuil_vigilance_m3s") or cfg.get("qix2_m3s")
+    mediane = cfg.get("mediane_m3s")
+    if seuil and v >= seuil:
+        return "eleve"
+    if mediane is not None and v < mediane:
+        return "faible"
+    return "ok"
+
+
+def _nav(v, nav):
+    st = nav.get("seuil_tranquille_m3s")
+    sf = nav.get("seuil_fort_m3s")
+    if st is None or sf is None:
+        return None
+    if v <= st:
+        return "tranquille"
+    if v >= sf:
+        return "fort"
+    return "moyen"
 
 
 def _meteo(site):

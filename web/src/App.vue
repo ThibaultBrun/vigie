@@ -44,6 +44,27 @@ const maree = computed(() => data.value?.maree)
 const debit = computed(() => data.value?.debit)
 const meteo = computed(() => data.value?.meteo)
 const notes = computed(() => data.value?.notes || [])
+
+const jauge = computed(() => {
+  const d = debit.value
+  if (!d?.disponible || !d.echelle || d.echelle.min_m3s == null) return null
+  const e = d.echelle
+  const span = e.max_m3s - e.min_m3s
+  const pct = (x) => Math.max(0, Math.min(100, ((x - e.min_m3s) / span) * 100))
+  const vert = pct(e.seuil_tranquille_m3s)
+  const orange = pct(e.seuil_fort_m3s) - vert
+  return {
+    vert,
+    orange,
+    rouge: 100 - vert - orange,
+    curseur: (e.position ?? 0) * 100,
+    hors: e.hors_echelle,
+    min: e.min_m3s,
+    max: e.max_m3s,
+  }
+})
+
+const NAV_LABEL = { tranquille: 'Tranquille', moyen: 'Ça pousse', fort: 'Fort courant' }
 </script>
 
 <template>
@@ -88,8 +109,31 @@ const notes = computed(() => data.value?.notes || [])
       <h2>💧 Débit Nive</h2>
       <template v-if="debit.disponible">
         <div class="ligne"><span class="k">Débit</span><span class="v">{{ debit.valeur_m3s }} m³/s</span></div>
-        <div class="ligne"><span class="k">Palier</span><span class="v"><span class="badge" :class="debit.palier">{{ debit.palier }}</span></span></div>
+        <div class="ligne" v-if="debit.navigation && debit.navigation.niveau">
+          <span class="k">Navigation pirogue</span>
+          <span class="v"><span class="nav-badge" :class="debit.navigation.niveau">{{ NAV_LABEL[debit.navigation.niveau] }}</span></span>
+        </div>
+
+        <div class="jauge" v-if="jauge">
+          <div class="jauge-bar">
+            <div class="zone vert" :style="{ width: jauge.vert + '%' }"></div>
+            <div class="zone orange" :style="{ width: jauge.orange + '%' }"></div>
+            <div class="zone rouge" :style="{ width: jauge.rouge + '%' }"></div>
+            <div class="curseur" :style="{ left: jauge.curseur + '%' }"></div>
+          </div>
+          <div class="jauge-labels">
+            <span>{{ jauge.min }}</span>
+            <span v-if="jauge.hors" class="stale">crue — hors échelle</span>
+            <span>{{ jauge.max }}+ m³/s</span>
+          </div>
+        </div>
+
+        <div class="ligne"><span class="k">Médian / module</span><span class="v">{{ debit.reperes.mediane_m3s }} / {{ debit.reperes.module_m3s }} m³/s</span></div>
         <div class="horo">{{ debit.source }} · {{ fmt(debit.horodatage) }}</div>
+        <details class="methode" v-if="debit.navigation && debit.navigation.note">
+          <summary>Seuils navigation</summary>
+          <p>{{ debit.navigation.note }} Repères Nive à Cambo (1999–2026) : min connu {{ debit.reperes.min_connu_m3s }}, médian {{ debit.reperes.mediane_m3s }}, module {{ debit.reperes.module_m3s }}, max connu {{ debit.reperes.max_connu_m3s }} m³/s.</p>
+        </details>
       </template>
       <p v-else class="stale">Donnée indisponible</p>
     </section>

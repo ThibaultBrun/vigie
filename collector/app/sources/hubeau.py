@@ -44,26 +44,14 @@ def _phase(obs):
     return "etale"
 
 
-def debit(code_station, station_nom, cfg):
+def debit(code_station, station_nom):
     data = _get({"code_entite": code_station, "grandeur_hydro": "Q", "size": 3, "sort": "desc"})
     obs = [o for o in data.get("data", []) if o.get("resultat_obs") is not None]
     if not obs:
         return None
     dernier = obs[0]
-    m3s = round(dernier["resultat_obs"] / 1000.0, 2)
     return {
-        "valeur_m3s": m3s,
-        "palier": _palier(m3s, cfg),
+        "valeur_m3s": round(dernier["resultat_obs"] / 1000.0, 2),
         "source": f"{station_nom} {code_station}",
         "horodatage": _to_paris(dernier["date_obs"]),
     }
-
-
-def _palier(m3s, cfg):
-    seuil_eleve = cfg.get("seuil_vigilance_m3s") or cfg.get("qix2_m3s")
-    mediane = cfg.get("mediane_m3s")
-    if seuil_eleve and m3s >= seuil_eleve:
-        return "eleve"
-    if mediane is not None:
-        return "faible" if m3s < mediane else "ok"
-    return "indetermine"
