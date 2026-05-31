@@ -72,6 +72,10 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 .nav-badge.moyen { background: #5a4a1f; color: #f0d68a; }
 .nav-badge.fort { background: #6b2424; color: #ff9c9c; }
 
+.cam { opacity: 0.92; }
+.cam-tag { font-size: 0.7rem; color: var(--sub); font-weight: normal; }
+.cam-img { width: 100%; border-radius: 10px; display: block; }
+
 .methode { margin-top: 10px; }
 .methode summary { color: var(--accent); font-size: 0.78rem; cursor: pointer; }
 .methode p { color: var(--sub); font-size: 0.76rem; line-height: 1.4; margin: 6px 0 0; }

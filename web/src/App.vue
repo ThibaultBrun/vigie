@@ -44,6 +44,7 @@ const maree = computed(() => data.value?.maree)
 const debit = computed(() => data.value?.debit)
 const meteo = computed(() => data.value?.meteo)
 const notes = computed(() => data.value?.notes || [])
+const webcam = computed(() => data.value?.webcam)
 
 const jauge = computed(() => {
   const d = debit.value
@@ -154,6 +155,18 @@ const NAV_LABEL = { tranquille: 'Tranquille', moyen: 'Ça pousse', fort: 'Fort c
     <div class="notes" v-if="notes.length">
       <div v-for="(n, i) in notes" :key="i">• {{ n }}</div>
     </div>
+
+    <section class="carte cam" v-if="webcam && webcam.disponible">
+      <h2>🎥 Webcam <span class="cam-tag">secondaire</span></h2>
+      <a :href="webcam.page_url" target="_blank" rel="noopener">
+        <img :src="webcam.image_url" :alt="webcam.nom" class="cam-img" loading="lazy" />
+      </a>
+      <div class="horo">
+        {{ webcam.nom }} —
+        <a :href="webcam.page_url" target="_blank" rel="noopener">voir en direct</a>
+        <span v-if="webcam.horodatage"> · capture {{ fmt(webcam.horodatage) }}</span>
+      </div>
+    </section>
 
     <footer>
       <p class="sources">Sources : Hub'Eau / Eaufrance · Open-Meteo · données SHOM · Météo-France</p>

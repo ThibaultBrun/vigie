@@ -1,7 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from .config import charger_site
-from .sources import hubeau, openmeteo, tide_harmonic
+from .sources import hubeau, openmeteo, tide_harmonic, webcam
 
 PARIS = ZoneInfo("Europe/Paris")
 
@@ -12,6 +12,7 @@ def construire(site_id):
     maree = _bloc(_maree, site, notes, "maree")
     debit = _bloc(_debit, site, notes, "debit")
     meteo = _bloc(_meteo, site, notes, "meteo")
+    webcam_data = _bloc(_webcam, site, notes, "webcam") if site.get("webcam") else None
     danger = _danger(debit)
     return {
         "point": {"nom": site["nom"], "lat": site["lat"], "lon": site["lon"]},
@@ -19,6 +20,7 @@ def construire(site_id):
         "maree": maree,
         "debit": debit,
         "meteo": meteo,
+        "webcam": webcam_data,
         "danger": danger,
         "notes": notes,
     }
@@ -132,6 +134,19 @@ def _meteo(site):
     m = openmeteo.meteo(site["lat"], site["lon"])
     m["disponible"] = True
     return m
+
+
+def _webcam(site):
+    cfg = site["webcam"]
+    snap = webcam.snapshot(cfg["page_url"])
+    base = {"nom": cfg.get("nom"), "page_url": cfg["page_url"]}
+    if not snap:
+        base["disponible"] = False
+        return base
+    base["disponible"] = True
+    base["image_url"] = snap["image_url"]
+    base["horodatage"] = snap.get("horodatage")
+    return base
 
 
 def _danger(debit):

@@ -27,5 +27,9 @@
       "note": "Repères de navigabilité en pirogue (remontée de courant). Seuil tranquille→ça pousse calé sur un ressenti réel (mardi 26/05, ~14,9 m³/s = limite vert/jaune). Seuil ça pousse→fort encore provisoire. Ce ne sont PAS des données officielles."
     }
   },
-  "vigilance_departement": "64"
+  "vigilance_departement": "64",
+  "webcam": {
+    "nom": "Bayonne – Dagourette (Viewsurf)",
+    "page_url": "https://pv.viewsurf.com/1270/Bayonne-Dagourette?i=NTM0ODp1bmRlZmluZWQ"
+  }
 }
