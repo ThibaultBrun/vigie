@@ -59,11 +59,7 @@ header h1 { margin: 0 0 4px; font-size: 1.4rem; }
 .notes { color: #e0a24a; font-size: 0.8rem; margin: 8px 0; }
 
 .jauge { margin: 12px 0 6px; }
-.jauge-bar { position: relative; display: flex; height: 14px; border-radius: 7px; overflow: hidden; }
-.zone { height: 100%; }
-.zone.vert { background: #2e8b57; }
-.zone.orange { background: #c8922e; }
-.zone.rouge { background: #b03636; }
+.jauge-bar { position: relative; height: 14px; border-radius: 7px; }
 .curseur { position: absolute; top: -3px; width: 3px; height: 20px; background: #fff; border-radius: 2px; box-shadow: 0 0 4px #000; transform: translateX(-50%); }
 .jauge-labels { display: flex; justify-content: space-between; color: var(--sub); font-size: 0.72rem; margin-top: 4px; }
 
