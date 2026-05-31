@@ -24,9 +24,9 @@
     "navigation_pirogue": {
       "echelle_min_m3s": 3.6,
       "echelle_max_m3s": 60,
-      "seuil_tranquille_m3s": 15,
-      "seuil_fort_m3s": 40,
-      "note": "Repères de navigabilité en pirogue (remontée de courant). Seuil tranquille→ça pousse calé sur un ressenti réel (mardi 26/05, ~14,9 m³/s = limite vert/jaune). Seuil ça pousse→fort encore provisoire. Ce ne sont PAS des données officielles."
+      "seuil_tranquille_m3s": 20,
+      "seuil_fort_m3s": 50,
+      "note": "Repères de navigabilité en pirogue (remontée de courant), réglés selon l'expérience : tranquille jusqu'à 20 m³/s, fort au-delà de 50. Ce ne sont PAS des données officielles."
     }
   },
   "vigilance_departement": "64",
