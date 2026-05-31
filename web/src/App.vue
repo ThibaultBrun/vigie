@@ -150,9 +150,9 @@ const prochainesMarees = computed(() => {
         <span class="k">🌡️ Temp / nuages</span>
         <span class="v">{{ ventSel.temp_c }} °C · {{ ventSel.cloud_cover_pct }} %</span>
       </div>
-      <div class="ligne" v-if="ventSel">
+      <div class="ligne" v-if="ventSel && ventSel.pluie_mm > 0">
         <span class="k">🌧️ Pluie</span>
-        <span class="v">{{ ventSel.pluie_mm ?? 0 }} mm<template v-if="ventSel.pluie_proba != null"> · {{ ventSel.pluie_proba }} %</template></span>
+        <span class="v">{{ ventSel.pluie_mm }} mm<template v-if="ventSel.pluie_proba != null"> · {{ ventSel.pluie_proba }} %</template></span>
       </div>
       <div class="ligne orage-ligne" v-if="ventSel && ventSel.orage">
         <span class="k">⛈️ Orage</span><span class="v">prévu à cette heure</span>
@@ -230,7 +230,7 @@ const prochainesMarees = computed(() => {
         <div class="ligne"><span class="k">Température</span><span class="v">{{ meteo.temp_c }} °C</span></div>
         <div class="ligne"><span class="k">Nuages</span><span class="v">{{ meteo.cloud_cover_pct }} %</span></div>
         <div class="ligne" v-if="meteo.ciel"><span class="k">Ciel</span><span class="v">{{ meteo.ciel }}</span></div>
-        <div class="ligne" v-if="meteo.pluie_mm != null"><span class="k">Pluie</span><span class="v">{{ meteo.pluie_mm }} mm</span></div>
+        <div class="ligne" v-if="meteo.pluie_mm > 0"><span class="k">Pluie</span><span class="v">{{ meteo.pluie_mm }} mm</span></div>
         <div class="ligne"><span class="k">Coucher du soleil</span><span class="v">{{ fmtH(meteo.coucher_soleil_local) }}</span></div>
         <div class="horo">Open-Meteo · {{ fmt(meteo.horodatage) }}</div>
       </template>
