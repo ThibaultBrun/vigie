@@ -93,6 +93,10 @@ const NUIT_FIN = 7
 
 const pas = ref(0)
 const futur = computed(() => pas.value > 0)
+const pctSlider = computed(() => {
+  const max = creneaux.value.length
+  return max ? Math.round((pas.value / max) * 100) : 0
+})
 
 const creneaux = computed(() => {
   void data.value
@@ -348,7 +352,7 @@ const remontee = computed(() => {
         <span class="tbar-label">{{ futur ? cibleLabel : '🕐 Maintenant' }}</span>
         <button class="btn-now" v-if="futur" @click="pas = 0">↩ Maintenant</button>
       </div>
-      <input class="slider" type="range" min="0" :max="creneaux.length" step="1" v-model.number="pas" />
+      <input class="slider" type="range" min="0" :max="creneaux.length" step="1" v-model.number="pas" :style="{ '--pct': pctSlider + '%' }" />
       <div class="tbar-hint">
         {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter jusqu’à 48 h' }}
       </div>
