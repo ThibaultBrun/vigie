@@ -35,21 +35,16 @@ def _bloc(fn, site, notes, nom):
 
 
 METHODE_PM_BM = (
-    "Heures estimées par analyse harmonique (utide) sur ~30 jours de mesures du "
-    "marégraphe de Pont Blanc. Le marégraphe est en estuaire : la marée y arrive plus "
-    "tard et atténuée par rapport au port de Boucau-Bayonne, et ce décalage varie avec "
-    "le débit de la Nive et le coefficient. Caler le modèle sur Pont Blanc lui-même "
-    "intègre nativement ce retard local. Le niveau observé reste prioritaire pour "
-    "l'instant présent ; les résidus liés au débit ne sont pas corrigés."
+    "Heures calculées par analyse harmonique des mesures du marégraphe de Pont Blanc "
+    "(Nive) : le retard et l'atténuation de l'estuaire sont déjà intégrés. "
+    "Le coefficient, lui, vient du port de Boucau-Bayonne."
 )
 
 
 METHODE_RENVERSE = (
-    "Le courant de marée bascule un peu après la pleine/basse mer, pas à l'heure "
-    "pile. La bascule (étale de courant) est estimée à l'instant où la vitesse de "
-    "variation du niveau dépasse un seuil — moment où le flot/jusant l'emporte. "
-    "Modèle provisoire calé sur Pont Blanc, seuil non encore vérifié sur le terrain "
-    "et qui dépendra du débit de la Nive. À considérer comme un ordre de grandeur."
+    "Le courant bascule un peu après la pleine/basse mer : on l'estime à l'instant "
+    "où le niveau varie assez vite pour que le courant de marée l'emporte. "
+    "Modèle provisoire, pas encore calé sur le terrain — un ordre de grandeur."
 )
 
 
