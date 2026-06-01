@@ -88,8 +88,6 @@ const notes = computed(() => data.value?.notes || [])
 const webcam = computed(() => data.value?.webcam)
 
 const HEURES = 7 * 24
-const NUIT_DEBUT = 22
-const NUIT_FIN = 7
 
 const pas = ref(0)
 const futur = computed(() => pas.value > 0)
@@ -106,8 +104,7 @@ const creneaux = computed(() => {
   base.setHours(base.getHours() + 1)
   const fin = Date.now() + HEURES * 3600000
   for (let t = base.getTime(); t <= fin; t += 3600000) {
-    const h = new Date(t).getHours()
-    if (h >= NUIT_FIN && h < NUIT_DEBUT) out.push(t)
+    out.push(t)
   }
   return out
 })
@@ -354,7 +351,7 @@ const remontee = computed(() => {
       </div>
       <input class="slider" type="range" min="0" :max="creneaux.length" step="1" v-model.number="pas" :style="{ '--pct': pctSlider + '%' }" />
       <div class="tbar-hint">
-        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter jusqu’à 48 h' }}
+        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter (jour et nuit) jusqu’à 7 jours' }}
       </div>
     </section>
 
