@@ -227,6 +227,13 @@ const prochainesRenverses = computed(() => {
     .slice(0, 2)
 })
 
+// Après la bascule, le courant prend ce sens (vu du ponton sur la Nive)
+function courantSens(r) {
+  return r.sens === 'jusant→flot'
+    ? { fleche: '↑', texte: 'remonte vers l’amont' }
+    : { fleche: '↓', texte: 'descend vers la mer' }
+}
+
 const NIVEAUX = {
   1: { label: 'Facile', classe: 'tranquille' },
   2: { label: 'Moyen', classe: 'moyen' },
@@ -338,8 +345,8 @@ const remontee = computed(() => {
         </div>
         <div class="horo" v-if="maree.station_horaires">Heures à {{ maree.station_horaires }} (Nive, ~1 km du ponton)</div>
         <div class="ligne" v-for="(r, i) in prochainesRenverses" :key="'rev' + i">
-          <span class="k">Renverse courant <span class="tag-prev">estim.</span></span>
-          <span class="v">{{ prefixeJour(r.heure_locale) }}{{ fmtH(r.heure_locale) }} <span class="cf-src">({{ r.sens }})</span></span>
+          <span class="k">Renverse {{ prefixeJour(r.heure_locale) }}{{ fmtH(r.heure_locale) }} <span class="tag-prev" v-if="i === 0">estim.</span></span>
+          <span class="v"><span class="rev-fleche">{{ courantSens(r).fleche }}</span> {{ courantSens(r).texte }}</span>
         </div>
         <details class="methode" v-if="maree.methode_pm_bm">
           <summary>Décalage estuaire & méthode</summary>

@@ -104,6 +104,7 @@ header h1 {
 .tg-dot { fill: #fff; }
 
 .cf-src { color: var(--sub); font-weight: normal; font-size: 0.75rem; }
+.rev-fleche { color: var(--accent); font-weight: 700; font-size: 1.05rem; }
 .coef7 { display: flex; gap: 4px; margin: 10px 0 4px; }
 .cj { flex: 1; text-align: center; background: #1b2a44; border-radius: 8px; padding: 5px 2px; }
 .cj-d { display: block; font-size: 0.62rem; color: var(--sub); }
