@@ -214,9 +214,9 @@ const jauge = computed(() => {
 })
 
 const prochainesMarees = computed(() => {
-  const now = Date.now() - 1800000
+  const ref = (futur.value ? cibleMs.value : Date.now()) - 1800000
   return (maree.value?.pm_bm || [])
-    .filter((p) => new Date(p.heure_locale).getTime() >= now)
+    .filter((p) => new Date(p.heure_locale).getTime() >= ref)
     .slice(0, 2)
 })
 
