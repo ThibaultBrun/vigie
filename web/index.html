@@ -10,6 +10,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Vigie" />
   <title>Vigie – conditions</title>
+  <script>
+    // Capter l'event d'installation au plus tôt (Chrome le tire parfois avant le montage Vue)
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault()
+      window.__bipEvent = e
+      window.dispatchEvent(new CustomEvent('bip-available'))
+    })
+  </script>
 </head>
 <body>
   <div id="app"></div>

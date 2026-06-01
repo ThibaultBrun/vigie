@@ -44,25 +44,29 @@ async function charger() {
 const installEvt = ref(null)        // event Chrome (Android/desktop)
 const iosHint = ref(false)          // iPhone : pas d'event -> on guide
 
-function onBeforeInstall(e) {
-  e.preventDefault()
-  installEvt.value = e
+function onBipAvailable() {
+  installEvt.value = window.__bipEvent || null
 }
 function onInstalled() {
   installEvt.value = null
+  window.__bipEvent = null
   iosHint.value = false
 }
 async function installer() {
-  if (!installEvt.value) return
-  installEvt.value.prompt()
-  await installEvt.value.userChoice
+  const e = installEvt.value
+  if (!e) return
+  e.prompt()
+  await e.userChoice
   installEvt.value = null
+  window.__bipEvent = null
 }
 
 onMounted(() => {
   charger()
   timer = setInterval(charger, 2 * 60 * 1000)
-  window.addEventListener('beforeinstallprompt', onBeforeInstall)
+  // event éventuellement capté avant le montage (script inline dans index.html)
+  if (window.__bipEvent) installEvt.value = window.__bipEvent
+  window.addEventListener('bip-available', onBipAvailable)
   window.addEventListener('appinstalled', onInstalled)
   const ua = navigator.userAgent || ''
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone
@@ -71,7 +75,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearInterval(timer)
-  window.removeEventListener('beforeinstallprompt', onBeforeInstall)
+  window.removeEventListener('bip-available', onBipAvailable)
   window.removeEventListener('appinstalled', onInstalled)
 })
 
