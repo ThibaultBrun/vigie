@@ -40,12 +40,40 @@ async function charger() {
   }
 }
 
+// --- Installation PWA ---
+const installEvt = ref(null)        // event Chrome (Android/desktop)
+const iosHint = ref(false)          // iPhone : pas d'event -> on guide
+
+function onBeforeInstall(e) {
+  e.preventDefault()
+  installEvt.value = e
+}
+function onInstalled() {
+  installEvt.value = null
+  iosHint.value = false
+}
+async function installer() {
+  if (!installEvt.value) return
+  installEvt.value.prompt()
+  await installEvt.value.userChoice
+  installEvt.value = null
+}
+
 onMounted(() => {
   charger()
   timer = setInterval(charger, 2 * 60 * 1000)
+  window.addEventListener('beforeinstallprompt', onBeforeInstall)
+  window.addEventListener('appinstalled', onInstalled)
+  const ua = navigator.userAgent || ''
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone
+  if (/iphone|ipad|ipod/i.test(ua) && !standalone) iosHint.value = true
 })
 
-onUnmounted(() => clearInterval(timer))
+onUnmounted(() => {
+  clearInterval(timer)
+  window.removeEventListener('beforeinstallprompt', onBeforeInstall)
+  window.removeEventListener('appinstalled', onInstalled)
+})
 
 const point = computed(() => data.value?.point)
 const danger = computed(() => data.value?.danger)
@@ -287,6 +315,18 @@ const remontee = computed(() => {
 </script>
 
 <template>
+  <div v-if="installEvt" class="install-bar">
+    <span>📲 Installer Vigie sur l’écran d’accueil</span>
+    <span class="ib-actions">
+      <button class="ib-go" @click="installer">Installer</button>
+      <button class="ib-x" @click="installEvt = null" aria-label="Fermer">✕</button>
+    </span>
+  </div>
+  <div v-else-if="iosHint" class="install-bar">
+    <span>📲 Ajouter à l’écran d’accueil : Partager <b>↑</b> → « Sur l’écran d’accueil »</span>
+    <button class="ib-x" @click="iosHint = false" aria-label="Fermer">✕</button>
+  </div>
+
   <div v-if="erreur" class="stale">Erreur de chargement : {{ erreur }}</div>
 
   <template v-if="data">
