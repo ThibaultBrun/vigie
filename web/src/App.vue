@@ -220,19 +220,25 @@ const prochainesMarees = computed(() => {
     .slice(0, 2)
 })
 
-const prochainesRenverses = computed(() => {
-  const ref = (futur.value ? cibleMs.value : Date.now()) - 1800000
-  return (maree.value?.renverse || [])
-    .filter((p) => new Date(p.heure_locale).getTime() >= ref)
-    .slice(0, 2)
-})
-
-// Après la bascule, le courant prend ce sens (vu du ponton sur la Nive)
-function courantSens(r) {
-  return r.sens === 'jusant→flot'
+// Sens du courant vu du ponton (Nive) : flot = remonte, jusant = descend
+function dirCourant(mot) {
+  return mot === 'flot'
     ? { fleche: '↑', texte: 'remonte vers l’amont' }
     : { fleche: '↓', texte: 'descend vers la mer' }
 }
+
+// Prochaine bascule au moment choisi (curseur ou maintenant)
+const prochaineBascule = computed(() => {
+  const ref = futur.value ? cibleMs.value : Date.now()
+  return (maree.value?.renverse || []).find((p) => new Date(p.heure_locale).getTime() >= ref) || null
+})
+// La bascule à venir indique le sens AVANT (courant actuel) et APRÈS
+const courantMaintenant = computed(() =>
+  prochaineBascule.value ? dirCourant(prochaineBascule.value.sens.split('→')[0]) : null
+)
+const courantApres = computed(() =>
+  prochaineBascule.value ? dirCourant(prochaineBascule.value.sens.split('→')[1]) : null
+)
 
 const NIVEAUX = {
   1: { label: 'Facile', classe: 'tranquille' },
@@ -344,10 +350,16 @@ const remontee = computed(() => {
           <span class="v">{{ prefixeJour(p.heure_locale) }}{{ fmtH(p.heure_locale) }} ({{ p.hauteur_m }} m)</span>
         </div>
         <div class="horo" v-if="maree.station_horaires">Heures à {{ maree.station_horaires }} (Nive, ~1 km du ponton)</div>
-        <div class="ligne" v-for="(r, i) in prochainesRenverses" :key="'rev' + i">
-          <span class="k">Renverse {{ prefixeJour(r.heure_locale) }}{{ fmtH(r.heure_locale) }} <span class="tag-prev" v-if="i === 0">estim.</span></span>
-          <span class="v"><span class="rev-fleche">{{ courantSens(r).fleche }}</span> {{ courantSens(r).texte }}</span>
-        </div>
+        <template v-if="prochaineBascule">
+          <div class="ligne">
+            <span class="k">Sens du courant{{ futur ? ' (à cette heure)' : '' }}</span>
+            <span class="v"><span class="rev-fleche">{{ courantMaintenant.fleche }}</span> {{ courantMaintenant.texte }}</span>
+          </div>
+          <div class="ligne">
+            <span class="k">Bascule <span class="tag-prev">estim.</span></span>
+            <span class="v">{{ prefixeJour(prochaineBascule.heure_locale) }}{{ fmtH(prochaineBascule.heure_locale) }} → <span class="rev-fleche">{{ courantApres.fleche }}</span> {{ courantApres.texte }}</span>
+          </div>
+        </template>
         <details class="methode" v-if="maree.methode_pm_bm">
           <summary>Décalage estuaire & méthode</summary>
           <p>{{ maree.methode_pm_bm }}</p>
