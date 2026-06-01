@@ -44,17 +44,31 @@ METHODE_PM_BM = (
 )
 
 
+METHODE_RENVERSE = (
+    "Le courant de marée bascule un peu après la pleine/basse mer, pas à l'heure "
+    "pile. La bascule (étale de courant) est estimée à l'instant où la vitesse de "
+    "variation du niveau dépasse un seuil — moment où le flot/jusant l'emporte. "
+    "Modèle provisoire calé sur Pont Blanc, seuil non encore vérifié sur le terrain "
+    "et qui dépendra du débit de la Nive. À considérer comme un ordre de grandeur."
+)
+
+
 def _maree(site):
     cfg = site["maree"]
+    rev_cfg = cfg.get("renverse", {})
     obs = hubeau.niveau_observe(cfg["station_observee"], cfg["station_nom"])
     if obs is None:
         return {"disponible": False}
     try:
-        analyse = tide_harmonic.analyser(cfg["station_observee"], site["lat"])
+        analyse = tide_harmonic.analyser(
+            cfg["station_observee"], site["lat"],
+            seuil_renverse_mph=rev_cfg.get("seuil_m_par_h", 0.15),
+        )
     except Exception:
         analyse = None
     pm_bm = analyse["pm_bm"] if analyse else []
     courbe = analyse["courbe"] if analyse else []
+    renverse = analyse.get("renverse", []) if analyse else []
     phase = _phase_maintenant(obs["phase"], pm_bm, obs["horodatage"])
     try:
         jours = maree_coef.coefficients(cfg["maree_info_id"]) if cfg.get("maree_info_id") else None
@@ -71,7 +85,10 @@ def _maree(site):
         "horodatage_niveau": obs["horodatage"],
         "pm_bm": pm_bm,
         "courbe": courbe,
+        "renverse": renverse,
         "methode_pm_bm": METHODE_PM_BM,
+        "methode_renverse": METHODE_RENVERSE,
+        "station_horaires": cfg.get("station_nom"),
         "coefficient": coef_today,
         "coefficients_jour": jours[0]["coefficients"] if jours else [],
         "coefficients_jours": jours or [],

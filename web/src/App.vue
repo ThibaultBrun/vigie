@@ -220,6 +220,13 @@ const prochainesMarees = computed(() => {
     .slice(0, 2)
 })
 
+const prochainesRenverses = computed(() => {
+  const ref = (futur.value ? cibleMs.value : Date.now()) - 1800000
+  return (maree.value?.renverse || [])
+    .filter((p) => new Date(p.heure_locale).getTime() >= ref)
+    .slice(0, 2)
+})
+
 const NIVEAUX = {
   1: { label: 'Facile', classe: 'tranquille' },
   2: { label: 'Moyen', classe: 'moyen' },
@@ -329,9 +336,18 @@ const remontee = computed(() => {
           <span class="k">{{ p.type === 'PM' ? 'Pleine mer' : 'Basse mer' }}</span>
           <span class="v">{{ prefixeJour(p.heure_locale) }}{{ fmtH(p.heure_locale) }} ({{ p.hauteur_m }} m)</span>
         </div>
+        <div class="horo" v-if="maree.station_horaires">Heures à {{ maree.station_horaires }} (Nive, ~1 km du ponton)</div>
+        <div class="ligne" v-for="(r, i) in prochainesRenverses" :key="'rev' + i">
+          <span class="k">Renverse courant <span class="tag-prev">estim.</span></span>
+          <span class="v">{{ prefixeJour(r.heure_locale) }}{{ fmtH(r.heure_locale) }} <span class="cf-src">({{ r.sens }})</span></span>
+        </div>
         <details class="methode" v-if="maree.methode_pm_bm">
           <summary>Décalage estuaire & méthode</summary>
           <p>{{ maree.methode_pm_bm }}</p>
+        </details>
+        <details class="methode" v-if="maree.methode_renverse">
+          <summary>Renverse de courant : comment c'est calculé</summary>
+          <p>{{ maree.methode_renverse }}</p>
         </details>
       </template>
       <p v-else class="stale">Donnée indisponible</p>

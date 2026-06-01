@@ -7,7 +7,11 @@
     "station_observee": "Q935251001",
     "station_nom": "Pont Blanc",
     "port_coef": "Boucau-Bayonne",
-    "maree_info_id": 140
+    "maree_info_id": 140,
+    "renverse": {
+      "seuil_m_par_h": 0.15,
+      "_note": "Seuil dη/dt provisoire pour estimer la bascule de courant. À caler sur des relevés terrain (heure réelle de renverse au ponton), séparément PM/BM, en fonction du débit."
+    }
   },
   "debit": {
     "station": "Q931251001",
