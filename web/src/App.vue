@@ -192,6 +192,35 @@ const coucherVue = computed(() => {
   return f ? f.heure : m.coucher_soleil_local
 })
 
+const estJour = computed(() => {
+  const h = new Date(cibleMs.value).getHours() + new Date(cibleMs.value).getMinutes() / 60
+  let coucher = 21
+  if (coucherVue.value) {
+    const s = new Date(coucherVue.value)
+    if (!isNaN(s)) coucher = s.getHours() + s.getMinutes() / 60
+  }
+  return h >= 7 && h < coucher
+})
+
+const meteoEmoji = computed(() => {
+  const m = meteoVue.value
+  if (!m) return '🌤️'
+  if (m.orage) return '⛈️'
+  const c = (m.ciel || '').toLowerCase()
+  if (c.includes('neige')) return '🌨️'
+  if (c.includes('averse')) return '🌦️'
+  if (c.includes('pluie')) return '🌧️'
+  if (c.includes('bruine')) return '🌦️'
+  if (c.includes('brouillard')) return '🌫️'
+  const jour = estJour.value
+  const cc = m.cloud_cover_pct ?? 0
+  if (c.includes('clair')) return jour ? '☀️' : '🌙'
+  if (cc < 25) return jour ? '☀️' : '🌙'
+  if (cc < 60) return jour ? '🌤️' : '☁️'
+  if (cc < 90) return jour ? '⛅' : '☁️'
+  return '☁️'
+})
+
 const VB_W = 320
 const VB_H = 90
 
@@ -449,7 +478,7 @@ const remontee = computed(() => {
     </section>
 
     <section class="carte">
-      <h2>🌤️ Météo <span class="tag-prev" v-if="futur">prévue</span></h2>
+      <h2>{{ meteoEmoji }} Météo <span class="tag-prev" v-if="futur">prévue</span></h2>
       <template v-if="meteoVue">
         <div class="ligne"><span class="k">Vent</span><span class="v">{{ meteoVue.vent_dir }} {{ meteoVue.vent_kmh }} km/h</span></div>
         <div class="ligne"><span class="k">Rafales</span><span class="v">{{ meteoVue.rafales_kmh }} km/h</span></div>
