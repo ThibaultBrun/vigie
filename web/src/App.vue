@@ -91,7 +91,10 @@ const HEURES = 2 * 24
 
 const pas = ref(0)
 const dateManuelle = ref(null)   // timestamp choisi au calendrier (null = piloté par le slider)
-const dtInput = ref(null)
+const dInput = ref(null)
+const hInput = ref(null)
+const jourSel = ref('')
+const heureSel = ref('')
 const futur = computed(() => cibleMs.value > Date.now() + 60000)
 const pctSlider = computed(() => {
   const max = creneaux.value.length
@@ -141,24 +144,34 @@ const cibleLabel = computed(() => {
   return `${p} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 })
 
-function toLocalInput(ms) {
-  const d = new Date(ms)
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-const dtMin = computed(() => toLocalInput(Date.now()))
-const dtMax = computed(() => toLocalInput(Date.now() + 7 * 86400000))
-function ouvrirCalendrier() {
-  const el = dtInput.value
+const cibleJour = computed(() => {
+  const d = new Date(cibleMs.value)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+})
+const cibleHeure = computed(() => {
+  const d = new Date(cibleMs.value)
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+})
+const dateMin = computed(() => {
+  const d = new Date()
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+})
+const dateMax = computed(() => {
+  const d = new Date(Date.now() + 7 * 86400000)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+})
+function ouvrir(el) {
   if (!el) return
   if (el.showPicker) el.showPicker()
   else el.click()
 }
-function onCalendrier(e) {
-  const v = e.target.value
-  if (!v) return
-  const t = new Date(v).getTime()
+function recombine() {
+  const j = jourSel.value || cibleJour.value
+  const h = heureSel.value || cibleHeure.value
+  const t = new Date(`${j}T${h}`).getTime()
+  if (isNaN(t)) return
   const arr = creneaux.value
-  // dans la portée du slider (48 h) -> on cale le slider ; au-delà -> mode manuel
+  // dans la portée du slider (48 h) -> on cale le slider ; au-delà -> cible manuelle
   if (arr.length && t >= Date.now() && t <= arr[arr.length - 1] + 1800000) {
     let bi = 0, bd = Infinity
     arr.forEach((ts, i) => { const dd = Math.abs(ts - t); if (dd < bd) { bd = dd; bi = i } })
@@ -168,6 +181,14 @@ function onCalendrier(e) {
     dateManuelle.value = t
     pas.value = 0
   }
+}
+function onJour(e) { jourSel.value = e.target.value; recombine() }
+function onHeure(e) { heureSel.value = e.target.value; recombine() }
+function resetCible() {
+  pas.value = 0
+  dateManuelle.value = null
+  jourSel.value = ''
+  heureSel.value = ''
 }
 
 const cibleDateStr = computed(() => {
@@ -409,14 +430,16 @@ const remontee = computed(() => {
       <div class="tbar-head">
         <span class="tbar-label">{{ futur ? cibleLabel : '🕐 Maintenant' }}</span>
         <span class="tbar-actions">
-          <button class="btn-cal" @click="ouvrirCalendrier" title="Choisir une date">📅</button>
-          <button class="btn-now" v-if="futur" @click="pas = 0; dateManuelle = null">↩ Maintenant</button>
-          <input ref="dtInput" type="datetime-local" class="dt-hidden" :min="dtMin" :max="dtMax" @change="onCalendrier" />
+          <button class="btn-cal" @click="ouvrir(dInput)" title="Choisir une date">📅</button>
+          <button class="btn-cal" @click="ouvrir(hInput)" title="Choisir une heure">🕐</button>
+          <button class="btn-now" v-if="futur" @click="resetCible">↩ Maintenant</button>
+          <input ref="dInput" type="date" class="dt-hidden" :min="dateMin" :max="dateMax" :value="jourSel || cibleJour" @change="onJour" />
+          <input ref="hInput" type="time" class="dt-hidden" :value="heureSel || cibleHeure" @change="onHeure" />
         </span>
       </div>
       <input class="slider" type="range" min="0" :max="creneaux.length" step="1" v-model.number="pas" @input="dateManuelle = null" :style="{ '--pct': pctSlider + '%' }" />
       <div class="tbar-hint">
-        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse jusqu’à 48 h, ou 📅 pour viser un autre jour' }}
+        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse jusqu’à 48 h, ou 📅 / 🕐 pour viser un autre moment' }}
       </div>
     </section>
 
