@@ -87,10 +87,12 @@ const meteo = computed(() => data.value?.meteo)
 const notes = computed(() => data.value?.notes || [])
 const webcam = computed(() => data.value?.webcam)
 
-const HEURES = 3 * 24
+const HEURES = 2 * 24
 
 const pas = ref(0)
-const futur = computed(() => pas.value > 0)
+const dateManuelle = ref(null)   // timestamp choisi au calendrier (null = piloté par le slider)
+const dtInput = ref(null)
+const futur = computed(() => cibleMs.value > Date.now() + 60000)
 const pctSlider = computed(() => {
   const max = creneaux.value.length
   return max ? Math.round((pas.value / max) * 100) : 0
@@ -110,6 +112,7 @@ const creneaux = computed(() => {
 })
 
 const cibleMs = computed(() => {
+  if (dateManuelle.value != null) return dateManuelle.value
   if (pas.value === 0) return Date.now()
   const arr = creneaux.value
   if (!arr.length) return Date.now()
@@ -137,6 +140,35 @@ const cibleLabel = computed(() => {
   const p = estAujourdhui(d) ? 'aujourd’hui' : jourDate(d)
   return `${p} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 })
+
+function toLocalInput(ms) {
+  const d = new Date(ms)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+const dtMin = computed(() => toLocalInput(Date.now()))
+const dtMax = computed(() => toLocalInput(Date.now() + 7 * 86400000))
+function ouvrirCalendrier() {
+  const el = dtInput.value
+  if (!el) return
+  if (el.showPicker) el.showPicker()
+  else el.click()
+}
+function onCalendrier(e) {
+  const v = e.target.value
+  if (!v) return
+  const t = new Date(v).getTime()
+  const arr = creneaux.value
+  // dans la portée du slider (48 h) -> on cale le slider ; au-delà -> mode manuel
+  if (arr.length && t >= Date.now() && t <= arr[arr.length - 1] + 1800000) {
+    let bi = 0, bd = Infinity
+    arr.forEach((ts, i) => { const dd = Math.abs(ts - t); if (dd < bd) { bd = dd; bi = i } })
+    pas.value = bi + 1
+    dateManuelle.value = null
+  } else {
+    dateManuelle.value = t
+    pas.value = 0
+  }
+}
 
 const cibleDateStr = computed(() => {
   const d = new Date(cibleMs.value)
@@ -376,11 +408,15 @@ const remontee = computed(() => {
     <section class="carte tbar">
       <div class="tbar-head">
         <span class="tbar-label">{{ futur ? cibleLabel : '🕐 Maintenant' }}</span>
-        <button class="btn-now" v-if="futur" @click="pas = 0">↩ Maintenant</button>
+        <span class="tbar-actions">
+          <button class="btn-cal" @click="ouvrirCalendrier" title="Choisir une date">📅</button>
+          <button class="btn-now" v-if="futur" @click="pas = 0; dateManuelle = null">↩ Maintenant</button>
+          <input ref="dtInput" type="datetime-local" class="dt-hidden" :min="dtMin" :max="dtMax" @change="onCalendrier" />
+        </span>
       </div>
-      <input class="slider" type="range" min="0" :max="creneaux.length" step="1" v-model.number="pas" :style="{ '--pct': pctSlider + '%' }" />
+      <input class="slider" type="range" min="0" :max="creneaux.length" step="1" v-model.number="pas" @input="dateManuelle = null" :style="{ '--pct': pctSlider + '%' }" />
       <div class="tbar-hint">
-        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter (jour et nuit) jusqu’à 3 jours' }}
+        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse jusqu’à 48 h, ou 📅 pour viser un autre jour' }}
       </div>
     </section>
 
