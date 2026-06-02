@@ -1,3 +1,4 @@
 requests
 tzdata
 utide
+psycopg[binary]>=3.1

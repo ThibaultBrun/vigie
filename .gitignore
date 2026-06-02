@@ -10,4 +10,5 @@ venv/
 node_modules/
 dist/
 web/public/data/*.json
+collector/archive/
 *.log
