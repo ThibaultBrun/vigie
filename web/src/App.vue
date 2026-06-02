@@ -338,8 +338,8 @@ const prochainesMarees = computed(() => {
 // Sens du courant vu du ponton (Nive) : flot = remonte, jusant = descend
 function dirCourant(mot) {
   return mot === 'flot'
-    ? { fleche: '↑', texte: 'remonte vers l’amont' }
-    : { fleche: '↓', texte: 'descend vers la mer' }
+    ? { fleche: '↑', texte: 'remonte vers l’amont', court: 'amont' }
+    : { fleche: '↓', texte: 'descend vers la mer', court: 'mer' }
 }
 
 // Prochaine bascule au moment choisi (curseur ou maintenant)
@@ -485,12 +485,12 @@ const remontee = computed(() => {
         <div class="horo" v-if="maree.station_horaires">Heures à {{ maree.station_horaires }} (Nive, ~1 km du ponton)</div>
         <template v-if="prochaineBascule">
           <div class="ligne">
-            <span class="k">Sens du courant{{ futur ? ' (à cette heure)' : '' }}</span>
+            <span class="k">Courant</span>
             <span class="v"><span class="rev-fleche">{{ courantMaintenant.fleche }}</span> {{ courantMaintenant.texte }}</span>
           </div>
           <div class="ligne">
             <span class="k">Bascule <span class="tag-prev">estim.</span></span>
-            <span class="v">{{ prefixeJour(prochaineBascule.heure_locale) }}{{ fmtH(prochaineBascule.heure_locale) }} → <span class="rev-fleche">{{ courantApres.fleche }}</span> {{ courantApres.texte }}</span>
+            <span class="v">{{ prefixeJour(prochaineBascule.heure_locale) }}{{ fmtH(prochaineBascule.heure_locale) }} → <span class="rev-fleche">{{ courantApres.fleche }}</span> {{ courantApres.court }}</span>
           </div>
         </template>
         <details class="methode" v-if="maree.methode_pm_bm">
