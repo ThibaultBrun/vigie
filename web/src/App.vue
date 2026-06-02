@@ -87,7 +87,7 @@ const meteo = computed(() => data.value?.meteo)
 const notes = computed(() => data.value?.notes || [])
 const webcam = computed(() => data.value?.webcam)
 
-const HEURES = 7 * 24
+const HEURES = 3 * 24
 
 const pas = ref(0)
 const futur = computed(() => pas.value > 0)
@@ -380,7 +380,7 @@ const remontee = computed(() => {
       </div>
       <input class="slider" type="range" min="0" :max="creneaux.length" step="1" v-model.number="pas" :style="{ '--pct': pctSlider + '%' }" />
       <div class="tbar-hint">
-        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter (jour et nuit) jusqu’à 7 jours' }}
+        {{ futur ? 'Prévisions à cette heure — débit & webcam non prévisibles (grisés)' : 'Glisse pour projeter (jour et nuit) jusqu’à 3 jours' }}
       </div>
     </section>
 
