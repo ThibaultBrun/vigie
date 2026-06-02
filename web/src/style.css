@@ -111,7 +111,7 @@ header h1 {
     left: 0;
     right: 0;
     margin: 0;
-    background: #08323d;            /* opaque : le contenu ne transparaît plus derrière */
+    background: linear-gradient(180deg, #0e5260 0%, #07313c 100%);  /* teinte distincte, ressort des cartes */
     backdrop-filter: none;
     border: none;
     border-top: 1px solid rgba(31, 209, 198, 0.3);
