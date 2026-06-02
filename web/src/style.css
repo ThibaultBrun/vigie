@@ -111,12 +111,16 @@ header h1 {
     left: 0;
     right: 0;
     margin: 0;
+    background: #08323d;            /* opaque : le contenu ne transparaît plus derrière */
+    backdrop-filter: none;
+    border: none;
+    border-top: 1px solid rgba(31, 209, 198, 0.3);
     border-radius: 16px 16px 0 0;
     z-index: 50;
-    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.5);
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
   }
-  #app { padding-bottom: 170px; }
+  #app { padding-bottom: 168px; }
 }
 .slider {
   -webkit-appearance: none; appearance: none;
