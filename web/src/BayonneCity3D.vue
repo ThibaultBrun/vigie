@@ -14,11 +14,11 @@ const erreur = ref(null)
 const H = 320
 let renderer, scene, camera, water, raf, ro, clock
 
-// hauteur du plan d'eau (m réels), avec une petite exagération pour la lisibilité
+// hauteur du plan d'eau : reste au niveau de la rivière, monte/descend modérément avec la marée
 function waterY(n) {
-  const base = -1
-  if (n == null) return base + 1.5
-  return base + n * 1.6
+  if (n == null) return -0.4
+  const r = Math.max(0, Math.min(1, (n - props.min) / (props.max - props.min || 1)))
+  return -1.5 + r * 2.8 // basse mer ~ -1.5 m, pleine mer ~ +1.3 m
 }
 
 function shapeFromPoly(poly) {
@@ -95,6 +95,32 @@ async function build(el) {
     water.position.y = waterY(props.niveau)
     scene.add(water)
     wgeos.forEach((g) => g.dispose())
+  }
+
+  // Ponts — tabliers au-dessus de la Nive (les lignes OSM bridge -> rubans de boîtes)
+  const bgeos = []
+  const BW = 8, BTH = 1, BY = 6
+  for (const br of data.bridges || []) {
+    const p = br.p || []
+    for (let i = 0; i < p.length - 1; i++) {
+      const [x1, z1] = p[i]
+      const [x2, z2] = p[i + 1]
+      const dx = x2 - x1, dz = z2 - z1
+      const len = Math.hypot(dx, dz)
+      if (len < 1) continue
+      const g = new THREE.BoxGeometry(len, BTH, BW)
+      g.rotateY(-Math.atan2(dz, dx))
+      g.translate((x1 + x2) / 2, BY, (z1 + z2) / 2)
+      bgeos.push(g)
+    }
+  }
+  if (bgeos.length) {
+    const bridges = new THREE.Mesh(
+      mergeGeometries(bgeos, false),
+      new THREE.MeshStandardMaterial({ color: 0xcdb49a, roughness: 0.9 }),
+    )
+    scene.add(bridges)
+    bgeos.forEach((g) => g.dispose())
   }
 
   clock = new THREE.Clock()
