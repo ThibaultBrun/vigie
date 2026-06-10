@@ -210,6 +210,8 @@ def _orage_proche(evolution):
         if not p.get("orage"):
             continue
         t = datetime.fromisoformat(p["heure_locale"])
+        if t.tzinfo is None:  # heures Open-Meteo en local naïf -> on les rend tz-aware
+            t = t.replace(tzinfo=PARIS)
         delta = (t - maintenant).total_seconds()
         if 0 <= delta <= 6 * 3600:
             return t.strftime("%Hh%M")

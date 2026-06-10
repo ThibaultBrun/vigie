@@ -1,3 +1,5 @@
+import time
+
 import requests
 
 URL = "https://api.open-meteo.com/v1/forecast"
@@ -47,9 +49,18 @@ def meteo(lat, lon):
         "wind_speed_unit": "kmh",
         "forecast_days": 7,
     }
-    r = requests.get(URL, params=params, timeout=20)
-    r.raise_for_status()
-    d = r.json()
+    derniere = None
+    for _ in range(3):
+        try:
+            r = requests.get(URL, params=params, timeout=(10, 30))
+            r.raise_for_status()
+            d = r.json()
+            break
+        except requests.RequestException as e:
+            derniere = e
+            time.sleep(2)
+    else:
+        raise derniere
     c = d.get("current", {})
     daily = d.get("daily", {})
     hourly = d.get("hourly", {})
