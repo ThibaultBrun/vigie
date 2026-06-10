@@ -28,8 +28,15 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globIgnores: ['**/Nive3D-*.js'],   // gros chunk Three.js : chargé/caché à la demande, pas au precache
         navigateFallback: 'index.html',
         runtimeCaching: [
+          {
+            // Chunk 3D (Three.js) : récupéré quand on ouvre la vue 3D, puis caché
+            urlPattern: ({ url }) => /\/Nive3D-.*\.js$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'vigie-3d', expiration: { maxEntries: 3 } },
+          },
           {
             // Données marée/débit : réseau d'abord (frais si en ligne), cache si hors-ligne
             urlPattern: ({ url }) => url.pathname.includes('/data/') && url.pathname.endsWith('.json'),

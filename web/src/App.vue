@@ -1,5 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
+
+const Nive3D = defineAsyncComponent(() => import('./Nive3D.vue'))
+const show3D = ref(false)
 
 const SITE = new URLSearchParams(location.search).get('site') || 'bayonne-nive'
 const data = ref(null)
@@ -217,6 +220,14 @@ const mareeVue = computed(() => {
   const s = mareeSel.value
   if (!s) return { niveau: m.niveau_observe_m, phase: m.phase, label: 'observé' }
   return { niveau: s.niveau_m, phase: s.phase, label: 'prévu' }
+})
+
+const niveau3d = computed(() => mareeVue.value?.niveau ?? null)
+const bornes3d = computed(() => {
+  const c = maree.value?.courbe || []
+  if (!c.length) return { min: 1, max: 4.5 }
+  const hs = c.map((p) => p.niveau_m)
+  return { min: Math.min(...hs) - 0.2, max: Math.max(...hs) + 0.2 }
 })
 
 const meteoVue = computed(() => {
@@ -503,6 +514,15 @@ const remontee = computed(() => {
         </details>
       </template>
       <p v-else class="stale">Donnée indisponible</p>
+    </section>
+
+    <section class="carte">
+      <h2>🧊 Vue 3D de la Nive</h2>
+      <button v-if="!show3D" class="btn-now" @click="show3D = true">Afficher la 3D 🌊</button>
+      <template v-else>
+        <Nive3D :niveau="niveau3d" :min="bornes3d.min" :max="bornes3d.max" />
+        <div class="horo">Plan d'eau synchronisé à la marée<span v-if="niveau3d != null"> (niveau {{ niveau3d }} m)</span>. Berges &amp; ponton illustratifs (à caler).</div>
+      </template>
     </section>
 
     <section class="carte" :class="{ grise: futur }">
