@@ -32,10 +32,16 @@ export default defineConfig({
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
-            // Chunk 3D (Three.js) + modèle Bayonne : récupérés à l'ouverture de la vue 3D, puis cachés
-            urlPattern: ({ url }) => /\/BayonneCity3D-.*\.js$/.test(url.pathname) || /bayonne3d\.json$/.test(url.pathname),
+            // Chunk 3D (Three.js) : hashé/immuable -> CacheFirst
+            urlPattern: ({ url }) => /\/BayonneCity3D-.*\.js$/.test(url.pathname),
             handler: 'CacheFirst',
-            options: { cacheName: 'vigie-3d', expiration: { maxEntries: 4 } },
+            options: { cacheName: 'vigie-3d', expiration: { maxEntries: 3 } },
+          },
+          {
+            // Modèle Bayonne (même nom, peut changer) -> revalidation en arrière-plan
+            urlPattern: ({ url }) => /bayonne3d\.json$/.test(url.pathname),
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'vigie-3d-model', expiration: { maxEntries: 2 } },
           },
           {
             // Données marée/débit : réseau d'abord (frais si en ligne), cache si hors-ligne
