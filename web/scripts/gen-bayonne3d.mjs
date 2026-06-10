@@ -13,11 +13,11 @@ import { dirname, join } from "node:path";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, "..", "public", "bayonne3d.json");
 
-// Centre = ponton Aviron Bayonnais (Nive)
-const LAT0 = 43.4866;
-const LON0 = -1.4751;
-// bbox : corridor de la Nive (centre + ponts + ponton)
-const BBOX = [43.484, -1.482, 43.497, -1.468]; // S, O, N, E
+// bbox fournie (zone centre Bayonne / Nive) : S, O, N, E
+const BBOX = [43.484916, -1.477983, 43.493700, -1.471245];
+// Centre de projection = milieu de la bbox (caméra centrée sur la zone)
+const LAT0 = (BBOX[0] + BBOX[2]) / 2;
+const LON0 = (BBOX[1] + BBOX[3]) / 2;
 
 const QUERY = `[out:json][timeout:90];
 (
@@ -47,17 +47,27 @@ function hauteur(tags = {}) {
 }
 
 async function overpass() {
-  const r = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": "vigie-bayonne3d/1.0 (https://vigie.tbrun.dev)",
-      Accept: "application/json",
-    },
-    body: "data=" + encodeURIComponent(QUERY),
-  });
-  if (!r.ok) throw new Error("Overpass HTTP " + r.status);
-  return r.json();
+  let derniere;
+  for (let essai = 1; essai <= 4; essai++) {
+    try {
+      const r = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "vigie-bayonne3d/1.0 (https://vigie.tbrun.dev)",
+          Accept: "application/json",
+        },
+        body: "data=" + encodeURIComponent(QUERY),
+      });
+      if (!r.ok) throw new Error("Overpass HTTP " + r.status);
+      return await r.json();
+    } catch (e) {
+      derniere = e;
+      console.warn(`essai ${essai} échoué (${e.message}), nouvelle tentative…`);
+      await new Promise((res) => setTimeout(res, 4000));
+    }
+  }
+  throw derniere;
 }
 
 function ring(geom) {
