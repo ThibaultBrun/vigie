@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
 
-const Nive3D = defineAsyncComponent(() => import('./Nive3D.vue'))
+const City3D = defineAsyncComponent(() => import('./BayonneCity3D.vue'))
 const show3D = ref(false)
 
 const SITE = new URLSearchParams(location.search).get('site') || 'bayonne-nive'
@@ -520,8 +520,8 @@ const remontee = computed(() => {
       <h2>🧊 Vue 3D de la Nive</h2>
       <button v-if="!show3D" class="btn-now" @click="show3D = true">Afficher la 3D 🌊</button>
       <template v-else>
-        <Nive3D :niveau="niveau3d" :min="bornes3d.min" :max="bornes3d.max" />
-        <div class="horo">Plan d'eau synchronisé à la marée<span v-if="niveau3d != null"> (niveau {{ niveau3d }} m)</span>. Berges &amp; ponton illustratifs (à caler).</div>
+        <City3D :niveau="niveau3d" :min="bornes3d.min" :max="bornes3d.max" />
+        <div class="horo">Bayonne (bâtiments OSM réels) + plan d'eau Nive/Adour à la hauteur de la marée<span v-if="niveau3d != null"> ({{ niveau3d }} m)</span>. Modèle stylisé, hauteurs approximatives.</div>
       </template>
     </section>
 
