@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 const props = defineProps({
   niveau: { type: Number, default: null },
@@ -12,7 +13,7 @@ const props = defineProps({
 const wrap = ref(null)
 const erreur = ref(null)
 const H = 320
-let renderer, scene, camera, water, raf, ro, clock
+let renderer, scene, camera, water, raf, ro, controls
 
 // hauteur du plan d'eau : reste au niveau de la rivière, monte/descend modérément avec la marée
 function waterY(n) {
@@ -37,13 +38,22 @@ async function build(el) {
   scene.fog = new THREE.Fog(0x0a2030, 500, 1600)
 
   camera = new THREE.PerspectiveCamera(55, w / H, 1, 4000)
-  camera.position.set(380, 320, 560)
-  camera.lookAt(0, 10, 0)
+  camera.position.set(280, 180, 300)
 
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setSize(w, H)
   el.appendChild(renderer.domElement)
+
+  // Navigation libre : 1 doigt = tourner, 2 doigts = zoom/déplacer (souris : clic-gauche/molette/clic-droit)
+  controls = new OrbitControls(camera, renderer.domElement)
+  controls.target.set(0, 4, 0)
+  controls.enableDamping = true
+  controls.dampingFactor = 0.08
+  controls.minDistance = 50
+  controls.maxDistance = 1400
+  controls.maxPolarAngle = Math.PI * 0.49 // empêche de passer sous le sol
+  controls.update()
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.9))
   const sun = new THREE.DirectionalLight(0xfff2d8, 1.0)
@@ -130,16 +140,9 @@ async function build(el) {
     bgeos.forEach((g) => g.dispose())
   }
 
-  clock = new THREE.Clock()
-  const center = new THREE.Vector3(0, 4, 0)
   const animate = () => {
     raf = requestAnimationFrame(animate)
-    const t = clock.getElapsedTime()
-    const a = t * 0.06
-    camera.position.x = Math.sin(a) * 380
-    camera.position.z = Math.cos(a) * 380
-    camera.position.y = 175
-    camera.lookAt(center)
+    controls.update()
     if (water) water.position.y += (waterY(props.niveau) - water.position.y) * 0.06
     renderer.render(scene, camera)
   }
@@ -166,6 +169,7 @@ watch(() => props.niveau, () => {}) // l'animation lit props.niveau en continu
 
 onBeforeUnmount(() => {
   if (raf) cancelAnimationFrame(raf)
+  if (controls) controls.dispose()
   if (ro) ro.disconnect()
   if (renderer) {
     renderer.dispose()
