@@ -13,7 +13,7 @@ const props = defineProps({
 const wrap = ref(null)
 const erreur = ref(null)
 const H = 320
-let renderer, scene, camera, water, raf, ro, controls
+let renderer, scene, camera, water, raf, ro, controls, pontoon
 
 // hauteur du plan d'eau : reste au niveau de la rivière, monte/descend modérément avec la marée
 function waterY(n) {
@@ -140,10 +140,21 @@ async function build(el) {
     bgeos.forEach((g) => g.dispose())
   }
 
+  // Ponton Aviron Bayonnais (vraies coords), flotte avec la marée
+  const pX = (-1.4751 - data.center[1]) * mLon
+  const pZ = -(43.4866 - data.center[0]) * mLat
+  pontoon = new THREE.Mesh(
+    new THREE.BoxGeometry(24, 0.6, 5),
+    new THREE.MeshStandardMaterial({ color: 0x7a4f28, roughness: 0.85 }),
+  )
+  pontoon.position.set(pX, waterY(props.niveau) + 0.3, pZ)
+  scene.add(pontoon)
+
   const animate = () => {
     raf = requestAnimationFrame(animate)
     controls.update()
     if (water) water.position.y += (waterY(props.niveau) - water.position.y) * 0.06
+    if (pontoon && water) pontoon.position.y = water.position.y + 0.3
     renderer.render(scene, camera)
   }
   animate()
