@@ -131,14 +131,14 @@ async function build(el) {
   }
 
   clock = new THREE.Clock()
-  const center = new THREE.Vector3(0, 10, 0)
+  const center = new THREE.Vector3(0, 4, 0)
   const animate = () => {
     raf = requestAnimationFrame(animate)
     const t = clock.getElapsedTime()
     const a = t * 0.06
-    camera.position.x = Math.sin(a) * 620
-    camera.position.z = Math.cos(a) * 620
-    camera.position.y = 330
+    camera.position.x = Math.sin(a) * 380
+    camera.position.z = Math.cos(a) * 380
+    camera.position.y = 175
     camera.lookAt(center)
     if (water) water.position.y += (waterY(props.niveau) - water.position.y) * 0.06
     renderer.render(scene, camera)
