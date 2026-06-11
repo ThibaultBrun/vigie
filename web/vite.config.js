@@ -38,10 +38,10 @@ export default defineConfig({
             options: { cacheName: 'vigie-3d', expiration: { maxEntries: 3 } },
           },
           {
-            // Modèle Bayonne (même nom, peut changer) -> revalidation en arrière-plan
-            urlPattern: ({ url }) => /bayonne3d\.json$/.test(url.pathname),
+            // Modèle Bayonne + fond Esri (noms stables, peuvent changer) -> revalidation en arrière-plan
+            urlPattern: ({ url }) => /bayonne3d\.json$/.test(url.pathname) || /bayonne-basemap\.jpg$/.test(url.pathname),
             handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'vigie-3d-model', expiration: { maxEntries: 2 } },
+            options: { cacheName: 'vigie-3d-model', expiration: { maxEntries: 3 } },
           },
           {
             // Données marée/débit : réseau d'abord (frais si en ligne), cache si hors-ligne

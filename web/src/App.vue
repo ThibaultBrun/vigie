@@ -521,7 +521,7 @@ const remontee = computed(() => {
       <button v-if="!show3D" class="btn-now" @click="show3D = true">Afficher la 3D 🌊</button>
       <template v-else>
         <City3D :niveau="niveau3d" :min="bornes3d.min" :max="bornes3d.max" />
-        <div class="horo">Bayonne (bâtiments OSM réels) + plan d'eau Nive/Adour à la hauteur de la marée<span v-if="niveau3d != null"> ({{ niveau3d }} m)</span>. Modèle stylisé, hauteurs approximatives.</div>
+        <div class="horo">Eau Nive/Adour à la hauteur de la marée<span v-if="niveau3d != null"> ({{ niveau3d }} m)</span>. Fond © Esri World Imagery · bâtiments © OpenStreetMap (hauteurs approx.).</div>
       </template>
     </section>
 

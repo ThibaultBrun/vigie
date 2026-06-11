@@ -45,18 +45,25 @@ async function build(el) {
   renderer.setSize(w, H)
   el.appendChild(renderer.domElement)
 
-  scene.add(new THREE.AmbientLight(0x9fc6e0, 0.8))
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9))
   const sun = new THREE.DirectionalLight(0xfff2d8, 1.0)
   sun.position.set(300, 500, 200)
   scene.add(sun)
 
-  // Sol
+  // Sol = fond de plan Esri World Imagery, calé sur la bbox
+  const [bS, bW, bN, bE] = data.bbox
+  const mLat = 110540
+  const mLon = 111320 * Math.cos((data.center[0] * Math.PI) / 180)
+  const gW = (bE - bW) * mLon
+  const gD = (bN - bS) * mLat
+  const tex = new THREE.TextureLoader().load(`${import.meta.env.BASE_URL}bayonne-basemap.jpg`)
+  tex.colorSpace = THREE.SRGBColorSpace
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(4000, 4000),
-    new THREE.MeshStandardMaterial({ color: 0x223427, roughness: 1 }),
+    new THREE.PlaneGeometry(gW, gD),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 1 }),
   )
   ground.rotation.x = -Math.PI / 2
-  ground.position.y = -1.2
+  ground.position.y = 0
   scene.add(ground)
 
   // Bâtiments — extrudés puis fusionnés en un seul mesh

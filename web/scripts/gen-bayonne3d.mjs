@@ -103,3 +103,22 @@ writeFileSync(OUT, JSON.stringify(out));
 const kb = (JSON.stringify(out).length / 1024).toFixed(0);
 console.log(`écrit ${OUT}`);
 console.log(`bâtiments=${buildings.length} ponts=${bridges.length} eau=${water.length} | ${kb} Ko`);
+
+// --- Fond de plan Esri World Imagery (satellite) sur la bbox exacte, baké en asset ---
+const [bs, bw, bn, be] = BBOX;
+const planeW = (be - bw) * M_LON;
+const planeD = (bn - bs) * M_LAT;
+const imgH = 2048;
+const imgW = Math.round(imgH * (planeW / planeD));
+const esriURL =
+  "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export" +
+  `?bbox=${bw},${bs},${be},${bn}&bboxSR=4326&imageSR=4326&size=${imgW},${imgH}&format=jpg&f=image`;
+try {
+  const r = await fetch(esriURL, { headers: { "User-Agent": "vigie-bayonne3d/1.0" } });
+  if (!r.ok) throw new Error("Esri HTTP " + r.status);
+  const buf = Buffer.from(await r.arrayBuffer());
+  writeFileSync(join(HERE, "..", "public", "bayonne-basemap.jpg"), buf);
+  console.log(`fond Esri écrit (${imgW}x${imgH}, ${(buf.length / 1024).toFixed(0)} Ko)`);
+} catch (e) {
+  console.warn("fond Esri échoué:", e.message);
+}
