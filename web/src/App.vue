@@ -494,14 +494,18 @@ const remontee = computed(() => {
           <span class="v">{{ prefixeJour(p.heure_locale) }}{{ fmtH(p.heure_locale) }} ({{ p.hauteur_m }} m)</span>
         </div>
         <div class="horo" v-if="maree.station_horaires">Heures à {{ maree.station_horaires }} (Nive, ~1 km du ponton)</div>
-        <template v-if="prochaineBascule">
+        <div v-if="maree.jusant_permanent" class="ligne">
+          <span class="k">Courant <span class="tag-prev">estim.</span></span>
+          <span class="v"><span class="rev-fleche">↓</span> jusant permanent <span class="cf-src">(débit fort, pas de remontée)</span></span>
+        </div>
+        <template v-else-if="prochaineBascule">
           <div class="ligne">
             <span class="k">Courant</span>
             <span class="v"><span class="rev-fleche">{{ courantMaintenant.fleche }}</span> {{ courantMaintenant.texte }}</span>
           </div>
           <div class="ligne">
             <span class="k">Bascule <span class="tag-prev">estim.</span></span>
-            <span class="v">{{ prefixeJour(prochaineBascule.heure_locale) }}{{ fmtH(prochaineBascule.heure_locale) }} → <span class="rev-fleche">{{ courantApres.fleche }}</span> {{ courantApres.court }}</span>
+            <span class="v">{{ prefixeJour(prochaineBascule.heure_locale) }}{{ fmtH(prochaineBascule.heure_locale) }} → <span class="rev-fleche">{{ courantApres.fleche }}</span> {{ courantApres.court }}<span v-if="prochaineBascule.fiable === false" class="cf-src"> (incertain)</span></span>
           </div>
         </template>
         <details class="methode" v-if="maree.methode_pm_bm">

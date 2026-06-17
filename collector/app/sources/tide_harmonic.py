@@ -37,7 +37,7 @@ def _local_iso(grille, i):
     return ts.astimezone(PARIS).isoformat()
 
 
-def analyser(code_station, lat, seuil_renverse_mph=0.15):
+def analyser(code_station, lat):
     serie = _serie(code_station)
     if len(serie) < 1000:
         return None
@@ -88,36 +88,4 @@ def analyser(code_station, lat, seuil_renverse_mph=0.15):
             phase = "étale"
         courbe.append({"heure_locale": _local_iso(grille, i), "niveau_m": round(float(hp[i]), 2), "phase": phase})
 
-    # Renverse de courant (étale) : modèle provisoire dη/dt.
-    # La marée fait basculer le courant un peu APRÈS la PM/BM. On estime la
-    # bascule à l'instant où la vitesse de variation du niveau |dη/dt| dépasse
-    # un seuil (le courant de marée l'emporte alors sur l'inertie/le débit).
-    # Seuil non encore calibré sur le terrain ; à terme il dépendra du débit.
-    dt_h = 300 / 3600.0
-
-    def _rate(i):
-        a = max(0, i - 1)
-        b = min(n - 1, i + 1)
-        return (hp[b] - hp[a]) / ((b - a) * dt_h)
-
-    renverse = []
-    for k, (i, typ) in enumerate(extrema):
-        j_fin = extrema[k + 1][0] if k + 1 < len(extrema) else n - 1
-        cible = -1 if typ == "PM" else 1  # après PM le jusant (dη/dt<0) s'installe
-        trouve = None
-        for j in range(i + 1, j_fin):
-            r = _rate(j)
-            if (cible < 0 and r <= -seuil_renverse_mph) or (cible > 0 and r >= seuil_renverse_mph):
-                trouve = j
-                break
-        if trouve is None and j_fin > i + 1:  # marée trop molle : repli sur le |dη/dt| max
-            trouve = max(range(i + 1, j_fin), key=lambda j: abs(_rate(j)))
-        if trouve is not None:
-            renverse.append({
-                "heure_locale": _local_iso(grille, trouve),
-                "sens": "flot→jusant" if typ == "PM" else "jusant→flot",
-                "ref": typ,
-                "ref_heure_locale": _local_iso(grille, i),
-            })
-
-    return {"pm_bm": pm_bm, "courbe": courbe, "renverse": renverse}
+    return {"pm_bm": pm_bm, "courbe": courbe}

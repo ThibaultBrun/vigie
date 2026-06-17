@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from .config import charger_site
 from .sources import hubeau, openmeteo, tide_harmonic, webcam, maree_coef, debit_tendance
@@ -11,6 +11,12 @@ def construire(site_id):
     notes = []
     maree = _bloc(_maree, site, notes, "maree")
     debit = _bloc(_debit, site, notes, "debit")
+    # Renverse : calée sur PM/BM + débit Nive (Cambo)
+    if maree.get("disponible") and maree.get("pm_bm"):
+        q = debit.get("valeur_m3s") if debit.get("disponible") else None
+        maree["renverse"], maree["jusant_permanent"] = _renverse(
+            maree["pm_bm"], q, site["maree"].get("renverse", {})
+        )
     meteo = _bloc(_meteo, site, notes, "meteo")
     webcam_data = _bloc(_webcam, site, notes, "webcam") if site.get("webcam") else None
     danger = _danger(debit, meteo)
@@ -42,28 +48,52 @@ METHODE_PM_BM = (
 
 
 METHODE_RENVERSE = (
-    "Le courant bascule un peu après la pleine/basse mer : on l'estime à l'instant "
-    "où le niveau varie assez vite pour que le courant de marée l'emporte. "
-    "Modèle provisoire, pas encore calé sur le terrain — un ordre de grandeur."
+    "Renverse estimée à partir des heures de pleine/basse mer et du débit de la Nive, "
+    "calée sur ~155 sorties SUP réelles : le courant bascule vers le jusant un peu "
+    "AVANT la pleine mer (d'autant plus tôt que le débit est fort), et revient au flot "
+    "bien après la basse mer (estimation moins fiable). Au-delà de ~65 m³/s, le courant "
+    "reste au jusant en permanence (pas de remontée)."
 )
+
+
+def _renverse(pm_bm, q, cfg):
+    """Heures de renverse de courant à partir des PM/BM et du débit Nive (Cambo).
+    Calé sur ~155 sorties SUP Strava : flot→jusant AVANT la PM ; jusant→flot bien
+    APRÈS la BM (branche fragile) ; au-delà du débit seuil, jusant permanent."""
+    pm = cfg.get("pm_avance_min", [48, 0.96])      # PM - (a + b*Q)
+    bm = cfg.get("bm_retard_min", [118, 1.46])      # BM + (a + b*Q)
+    q_perm = cfg.get("debit_jusant_permanent_m3s", 65)
+    q = q if q is not None else 20.0
+    if q > q_perm:
+        return [], True  # plus de flot : courant jusant sur tout le cycle
+    out = []
+    for p in pm_bm:
+        t = datetime.fromisoformat(p["heure_locale"])
+        if p["type"] == "PM":
+            ts = t - timedelta(minutes=pm[0] + pm[1] * q)
+            out.append({"heure_locale": ts.isoformat(), "sens": "flot→jusant",
+                        "ref": "PM", "ref_heure_locale": p["heure_locale"],
+                        "fiable": True, "debit_m3s": round(q, 1)})
+        else:
+            ts = t + timedelta(minutes=bm[0] + bm[1] * q)
+            out.append({"heure_locale": ts.isoformat(), "sens": "jusant→flot",
+                        "ref": "BM", "ref_heure_locale": p["heure_locale"],
+                        "fiable": False, "debit_m3s": round(q, 1)})
+    out.sort(key=lambda r: r["heure_locale"])
+    return out, False
 
 
 def _maree(site):
     cfg = site["maree"]
-    rev_cfg = cfg.get("renverse", {})
     obs = hubeau.niveau_observe(cfg["station_observee"], cfg["station_nom"])
     if obs is None:
         return {"disponible": False}
     try:
-        analyse = tide_harmonic.analyser(
-            cfg["station_observee"], site["lat"],
-            seuil_renverse_mph=rev_cfg.get("seuil_m_par_h", 0.15),
-        )
+        analyse = tide_harmonic.analyser(cfg["station_observee"], site["lat"])
     except Exception:
         analyse = None
     pm_bm = analyse["pm_bm"] if analyse else []
     courbe = analyse["courbe"] if analyse else []
-    renverse = analyse.get("renverse", []) if analyse else []
     phase = _phase_maintenant(obs["phase"], pm_bm, obs["horodatage"])
     try:
         jours = maree_coef.coefficients(cfg["maree_info_id"]) if cfg.get("maree_info_id") else None
@@ -80,7 +110,6 @@ def _maree(site):
         "horodatage_niveau": obs["horodatage"],
         "pm_bm": pm_bm,
         "courbe": courbe,
-        "renverse": renverse,
         "methode_pm_bm": METHODE_PM_BM,
         "methode_renverse": METHODE_RENVERSE,
         "station_horaires": cfg.get("station_nom"),
