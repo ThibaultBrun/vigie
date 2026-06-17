@@ -63,6 +63,7 @@ def _renverse(pm_bm, q, cfg):
     pm = cfg.get("pm_avance_min", [48, 0.96])      # PM - (a + b*Q)
     bm = cfg.get("bm_retard_min", [118, 1.46])      # BM + (a + b*Q)
     q_perm = cfg.get("debit_jusant_permanent_m3s", 65)
+    inertie = cfg.get("inertie_min", 0)             # retard d'inertie (étale du courant), à caler terrain
     q = q if q is not None else 20.0
     if q > q_perm:
         return [], True  # plus de flot : courant jusant sur tout le cycle
@@ -70,12 +71,12 @@ def _renverse(pm_bm, q, cfg):
     for p in pm_bm:
         t = datetime.fromisoformat(p["heure_locale"])
         if p["type"] == "PM":
-            ts = t - timedelta(minutes=pm[0] + pm[1] * q)
+            ts = t - timedelta(minutes=pm[0] + pm[1] * q - inertie)
             out.append({"heure_locale": ts.isoformat(), "sens": "flot→jusant",
                         "ref": "PM", "ref_heure_locale": p["heure_locale"],
                         "fiable": True, "debit_m3s": round(q, 1)})
         else:
-            ts = t + timedelta(minutes=bm[0] + bm[1] * q)
+            ts = t + timedelta(minutes=bm[0] + bm[1] * q + inertie)
             out.append({"heure_locale": ts.isoformat(), "sens": "jusant→flot",
                         "ref": "BM", "ref_heure_locale": p["heure_locale"],
                         "fiable": False, "debit_m3s": round(q, 1)})

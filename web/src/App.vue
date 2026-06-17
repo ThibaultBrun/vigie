@@ -366,25 +366,31 @@ const courantApres = computed(() =>
   prochaineBascule.value ? dirCourant(prochaineBascule.value.sens.split('→')[1]) : null
 )
 
-// Intensité estimée du courant à l'heure choisie (modèle calé sur les sorties pirogue)
-// C ≈ biais(débit) − k·dη/dt  (en m/s, + = jusant vers la mer). Couleur par palier.
-const courantIntensite = computed(() => {
-  const c = maree.value?.courbe || []
-  if (c.length < 2) return null
-  let bi = 0, bd = Infinity
-  for (let i = 0; i < c.length; i++) {
-    const dd = Math.abs(new Date(c[i].heure_locale).getTime() - cibleMs.value)
-    if (dd < bd) { bd = dd; bi = i }
-  }
-  const a = Math.min(bi, c.length - 2)
-  const dtH = (new Date(c[a + 1].heure_locale).getTime() - new Date(c[a].heure_locale).getTime()) / 3600000
-  const slope = dtH ? (c[a + 1].niveau_m - c[a].niveau_m) / dtH : 0 // m/h
-  const q = debit.value?.disponible ? (debit.value.valeur_m3s || 0) : 20
-  const C = (0.11 + 0.0018 * q) - 0.39 * slope
-  const mag = Math.abs(C)
+// Intensité estimée du courant, CALÉE SUR LA RENVERSE : C ≈ 0 aux bascules,
+// max en milieu de fenêtre (demi-sinus), pic jusant = a+biais, pic flot = a−biais.
+// Le courant ne tombe donc plus à l'étale de niveau mais autour de la renverse.
+const A_MAREE = 0.236
+function _bucket(mag) {
   if (mag < 0.10) return { mag, label: 'faible', key: 'faible' }
   if (mag < 0.25) return { mag, label: 'modéré', key: 'modere' }
   return { mag, label: 'fort', key: 'fort' }
+}
+const courantIntensite = computed(() => {
+  const m = maree.value
+  if (!m) return null
+  const q = debit.value?.disponible ? (debit.value.valeur_m3s || 0) : 20
+  const biais = 0.11 + 0.0018 * q
+  if (m.jusant_permanent) return _bucket(biais + A_MAREE * 0.4)
+  const rev = m.renverse || []
+  if (rev.length < 2) return _bucket(biais)
+  const times = rev.map((r) => new Date(r.heure_locale).getTime())
+  const ni = times.findIndex((tt) => tt > cibleMs.value)
+  if (ni < 1) return _bucket(biais) // hors d'une fenêtre encadrée par 2 bascules
+  const frac = Math.max(0, Math.min(1, (cibleMs.value - times[ni - 1]) / (times[ni] - times[ni - 1])))
+  const env = Math.sin(Math.PI * frac) // 0 aux bascules, 1 au milieu
+  const sens = rev[ni - 1].sens.split('→')[1] // courant dans cette fenêtre
+  const pic = sens === 'jusant' ? A_MAREE + biais : Math.max(0.03, A_MAREE - biais)
+  return _bucket(env * pic)
 })
 
 const NIVEAUX = {
