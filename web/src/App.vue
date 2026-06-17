@@ -366,6 +366,27 @@ const courantApres = computed(() =>
   prochaineBascule.value ? dirCourant(prochaineBascule.value.sens.split('→')[1]) : null
 )
 
+// Intensité estimée du courant à l'heure choisie (modèle calé sur les sorties pirogue)
+// C ≈ biais(débit) − k·dη/dt  (en m/s, + = jusant vers la mer). Couleur par palier.
+const courantIntensite = computed(() => {
+  const c = maree.value?.courbe || []
+  if (c.length < 2) return null
+  let bi = 0, bd = Infinity
+  for (let i = 0; i < c.length; i++) {
+    const dd = Math.abs(new Date(c[i].heure_locale).getTime() - cibleMs.value)
+    if (dd < bd) { bd = dd; bi = i }
+  }
+  const a = Math.min(bi, c.length - 2)
+  const dtH = (new Date(c[a + 1].heure_locale).getTime() - new Date(c[a].heure_locale).getTime()) / 3600000
+  const slope = dtH ? (c[a + 1].niveau_m - c[a].niveau_m) / dtH : 0 // m/h
+  const q = debit.value?.disponible ? (debit.value.valeur_m3s || 0) : 20
+  const C = (0.11 + 0.0018 * q) - 0.39 * slope
+  const mag = Math.abs(C)
+  if (mag < 0.10) return { mag, label: 'faible', key: 'faible' }
+  if (mag < 0.25) return { mag, label: 'modéré', key: 'modere' }
+  return { mag, label: 'fort', key: 'fort' }
+})
+
 const NIVEAUX = {
   1: { label: 'Facile', classe: 'tranquille' },
   2: { label: 'Moyen', classe: 'moyen' },
@@ -454,7 +475,7 @@ const remontee = computed(() => {
       </div>
     </section>
 
-    <section class="carte" v-if="remontee">
+    <section class="carte" :class="courantIntensite ? 'bord-' + courantIntensite.key : ''" v-if="remontee">
       <h2>🛶 Remontée pirogue <span class="tag-prev" v-if="futur">{{ cibleLabel }}</span></h2>
       <div class="ligne">
         <span class="k">Effort estimé</span>
@@ -496,12 +517,12 @@ const remontee = computed(() => {
         <div class="horo" v-if="maree.station_horaires">Heures à {{ maree.station_horaires }} (Nive, ~1 km du ponton)</div>
         <div v-if="maree.jusant_permanent" class="ligne">
           <span class="k">Courant <span class="tag-prev">estim.</span></span>
-          <span class="v"><span class="rev-fleche">↓</span> jusant permanent <span class="cf-src">(débit fort, pas de remontée)</span></span>
+          <span class="v"><span class="rev-fleche">↓</span> jusant permanent <span v-if="courantIntensite" class="cur-chip" :class="courantIntensite.key">{{ courantIntensite.label }}</span></span>
         </div>
         <template v-else-if="prochaineBascule">
           <div class="ligne">
             <span class="k">Courant</span>
-            <span class="v"><span class="rev-fleche">{{ courantMaintenant.fleche }}</span> {{ courantMaintenant.texte }}</span>
+            <span class="v"><span class="rev-fleche">{{ courantMaintenant.fleche }}</span> {{ courantMaintenant.texte }} <span v-if="courantIntensite" class="cur-chip" :class="courantIntensite.key">{{ courantIntensite.label }}</span></span>
           </div>
           <div class="ligne">
             <span class="k">Bascule <span class="tag-prev">estim.</span></span>

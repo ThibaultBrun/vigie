@@ -158,6 +158,13 @@ header h1 {
 
 .cf-src { color: var(--sub); font-weight: normal; font-size: 0.75rem; }
 .rev-fleche { color: var(--accent); font-weight: 700; font-size: 1.05rem; }
+.cur-chip { font-size: 0.72rem; padding: 1px 8px; border-radius: 8px; font-weight: 700; margin-left: 4px; white-space: nowrap; }
+.cur-chip.faible { background: #1f4d33; color: #9be7b4; }
+.cur-chip.modere { background: #5a4a1f; color: #f0d68a; }
+.cur-chip.fort { background: #6b2424; color: #ff9c9c; }
+.carte.bord-faible { border-left: 5px solid #2e8b57; }
+.carte.bord-modere { border-left: 5px solid #e0a24a; }
+.carte.bord-fort { border-left: 5px solid var(--danger); }
 .install-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   background: var(--accent); color: #042b30; font-weight: 600;
