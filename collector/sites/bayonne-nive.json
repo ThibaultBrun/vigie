@@ -9,7 +9,7 @@
     "port_coef": "Boucau-Bayonne",
     "maree_info_id": 140,
     "renverse": {
-      "_modele": "PM/BM + débit Cambo, calé sur ~155 sorties SUP Strava (juin 2026). flot→jusant = PM-(a+b*Q) ; jusant→flot = BM+(a+b*Q) (fragile) ; jusant permanent au-delà du seuil débit.",
+      "_modele": "PM/BM + débit Cambo, calé sur ~155 sorties pirogue V6 Strava (juin 2026). flot→jusant = PM-(a+b*Q) ; jusant→flot = BM+(a+b*Q) (fragile) ; jusant permanent au-delà du seuil débit.",
       "pm_avance_min": [48, 0.96],
       "bm_retard_min": [118, 1.46],
       "debit_jusant_permanent_m3s": 65

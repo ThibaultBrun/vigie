@@ -49,7 +49,7 @@ METHODE_PM_BM = (
 
 METHODE_RENVERSE = (
     "Renverse estimée à partir des heures de pleine/basse mer et du débit de la Nive, "
-    "calée sur ~155 sorties SUP réelles : le courant bascule vers le jusant un peu "
+    "calée sur ~155 sorties pirogue (V6) réelles : le courant bascule vers le jusant un peu "
     "AVANT la pleine mer (d'autant plus tôt que le débit est fort), et revient au flot "
     "bien après la basse mer (estimation moins fiable). Au-delà de ~65 m³/s, le courant "
     "reste au jusant en permanence (pas de remontée)."
